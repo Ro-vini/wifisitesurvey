@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:paddingTop="35dp"
+    android:paddingBottom="50dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Toque no ponto correspondente na planta"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:gravity="center"
+        android:layout_marginBottom="8dp"/>
+
+    <ImageView
+        android:id="@+id/image_view_floorplan_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:contentDescription="Planta baixa para seleção de ponto" />
+
+</LinearLayout>
