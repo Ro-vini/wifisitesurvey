@@ -36,6 +36,8 @@ import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import android.graphics.Color;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
@@ -49,13 +51,25 @@ import android.provider.MediaStore;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
+// Adicione esta importação no topo (necessária para os novos métodos)
+import android.graphics.drawable.BitmapDrawable;
+import com.google.android.gms.maps.model.LatLngBounds;
+
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
+import android.content.Context;
+
 public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnCameraMoveListener {
 
     // Views e Componentes Principais
     private GoogleMap googleMap;
     private SurveyViewModel viewModel;
-    private TileOverlay heatmapOverlay;
+    //private TileOverlay heatmapOverlay;
+    private GroundOverlay heatmapOverlay;
     private GroundOverlay floorplanOverlay;
+    private FusedLocationProviderClient fusedLocationClient; // << ADICIONE ESTA LINHA
 
     // Views do Layout
     private Button startStopButton, generateHeatmapButton, btnConfirmPoint;
@@ -69,8 +83,6 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     private boolean isInitialCameraMoveDone = false;
     private float initialOverlayWidth;
 
-    private FusedLocationProviderClient fusedLocationClient; // << ADICIONE ESTA LINHA
-
     // Georreferenciamento
     private enum GeoreferenceState {
         NONE,
@@ -82,6 +94,9 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     private Bitmap floorplanBitmap;
     private LatLng firstMapPoint, secondMapPoint;
     private PointF firstImagePoint, secondImagePoint;
+
+    // --- Constantes ---
+    private static final float MAX_ZOOM_LEVEL = 21.0f; // Nível de zoom máximo (ruas=15, prédios=20, satélite=21/22)
 
     // Launchers de Atividade
     private final ActivityResultLauncher<String> requestPermissionLauncher =
@@ -157,6 +172,13 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     public void onMapReady(@NonNull GoogleMap map) {
         this.googleMap = map;
         googleMap.setOnCameraMoveListener(this);
+
+        // Zoom fixo
+        googleMap.getUiSettings().setZoomGesturesEnabled(false);
+        googleMap.getUiSettings().setZoomControlsEnabled(false);
+        googleMap.setMinZoomPreference(MAX_ZOOM_LEVEL);
+        googleMap.setMaxZoomPreference(MAX_ZOOM_LEVEL);
+
         checkLocationPermission();
     }
 
@@ -184,10 +206,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             // Centralizar mapa na ultima localização
             if (!isInitialCameraMoveDone) {
                 fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
-                    if (location != null) {
+                    if (location != null && !isInitialCameraMoveDone) {
                         // Move a câmera para a última localização conhecida
                         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(location.getLatitude(), location.getLongitude()), 19f
+                                new LatLng(location.getLatitude(), location.getLongitude()), MAX_ZOOM_LEVEL
                         ));
                         isInitialCameraMoveDone = true;
                     } else {
@@ -207,12 +229,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         });
 
         viewModel.getLiveLocation().observe(this, location -> {
-            if (location != null && !isInitialCameraMoveDone) {
-                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(location.getLatitude(), location.getLongitude()), 19f
-                ));
-                isInitialCameraMoveDone = true;
-            }
+            //if (location != null && !isInitialCameraMoveDone) {
+            //    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+            //           new LatLng(location.getLatitude(), location.getLongitude()), 19f
+            //    ));
+            //    isInitialCameraMoveDone = true;
+            //}
 
             if (viewModel.getIsTracking().getValue() != null && viewModel.getIsTracking().getValue()) {
                 viewModel.recordDataPoint(location);
@@ -374,8 +396,11 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         seekbarRotation.setOnSeekBarChangeListener(listener);
     }
 
+    // SUBSTITUA SEU drawHeatmap POR ESTE:
     private void drawHeatmap() {
-        if (heatmapOverlay != null) heatmapOverlay.remove();
+        if (heatmapOverlay != null) {
+            heatmapOverlay.remove();
+        }
 
         viewModel.getDataPointsForSurvey().observe(this, dataPoints -> {
             if (dataPoints == null || dataPoints.isEmpty()) {
@@ -383,21 +408,232 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 return;
             }
 
-            List<WeightedLatLng> weightedData = new ArrayList<>();
-            for (DataPoint point : dataPoints) {
-                double intensity = (point.rssi + 100.0) / 70.0;
-                intensity = Math.max(0.0, Math.min(intensity, 1.0));
-                weightedData.add(new WeightedLatLng(new LatLng(point.latitude, point.longitude), intensity));
+            Toast.makeText(this, "Gerando heatmap... Isso pode levar um momento.", Toast.LENGTH_SHORT).show();
+
+            // 1. Definir os limites (com ou sem planta)
+            final LatLngBounds bounds;
+            final float width, height, bearing;
+
+            if (floorplanOverlay != null) {
+                try {
+                    bounds = floorplanOverlay.getBounds();
+                    width = floorplanOverlay.getWidth();
+                    height = floorplanOverlay.getHeight();
+                    bearing = floorplanOverlay.getBearing();
+                } catch (Exception e) {
+                    Toast.makeText(SurveyActivity.this, "Erro ao ler dados da planta.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } else {
+                bounds = getBoundsFromData(dataPoints);
+                LatLng center = bounds.getCenter();
+                width = (float) SphericalUtil.computeDistanceBetween(
+                        new LatLng(center.latitude, bounds.southwest.longitude),
+                        new LatLng(center.latitude, bounds.northeast.longitude));
+                height = (float) SphericalUtil.computeDistanceBetween(
+                        new LatLng(bounds.southwest.latitude, center.longitude),
+                        new LatLng(bounds.northeast.latitude, center.longitude));
+                bearing = 0f;
             }
 
-            if (!weightedData.isEmpty()) {
-                HeatmapTileProvider provider = new HeatmapTileProvider.Builder()
-                        .weightedData(weightedData)
-                        .radius(50).opacity(0.8).build();
-                heatmapOverlay = googleMap.addTileOverlay(new TileOverlayOptions().tileProvider(provider));
-                Toast.makeText(this, "Mapa de calor gerado com " + dataPoints.size() + " pontos.", Toast.LENGTH_SHORT).show();
-            }
+            // 2. Roda a interpolação e o blur em uma nova thread
+            new Thread(() -> {
+                try {
+                    if (width <= 0 || height <= 0) {
+                        runOnUiThread(() -> Toast.makeText(SurveyActivity.this, "Erro: Área de heatmap inválida.", Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+
+                    int resolutionX, resolutionY;
+                    int baseResolution = 150;
+                    if (width > height) {
+                        resolutionX = baseResolution;
+                        resolutionY = (int) ((height / width) * baseResolution);
+                    } else {
+                        resolutionY = baseResolution;
+                        resolutionX = (int) ((width / height) * baseResolution);
+                    }
+                    if (resolutionX < 2) resolutionX = 2;
+                    if (resolutionY < 2) resolutionY = 2;
+
+                    // 3. Interpola os dados (Método B)
+                    final double[][] interpolatedGrid = interpolateIdw(dataPoints, bounds, resolutionX, resolutionY);
+
+                    // 4. Cria o bitmap "pixelado" (Método B)
+                    final Bitmap heatmapBitmap = createHeatmapBitmap(interpolatedGrid);
+
+                    // 5. APLICA O BLUR (A NOVA ETAPA)
+                    final Bitmap blurredBitmap = blurBitmap(SurveyActivity.this, heatmapBitmap, 15.0f);
+
+                    // 6. Adiciona o bitmap final ao mapa
+                    runOnUiThread(() -> {
+                        GroundOverlayOptions options = new GroundOverlayOptions()
+                                .image(BitmapDescriptorFactory.fromBitmap(blurredBitmap)) // Usa o bitmap com blur
+                                .positionFromBounds(bounds)
+                                .bearing(bearing)
+                                .transparency(0.3f);
+
+                        heatmapOverlay = googleMap.addGroundOverlay(options);
+                        Toast.makeText(SurveyActivity.this, "Mapa de calor gerado com " + dataPoints.size() + " pontos.", Toast.LENGTH_SHORT).show();
+                    });
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(SurveyActivity.this, "Falha ao gerar heatmap: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                }
+
+            }).start();
+
             viewModel.getDataPointsForSurvey().removeObservers(this);
         });
+    }
+
+
+// --- COLE TODOS OS 5 MÉTODOS ABAIXO NO SEU ARQUIVO ---
+
+    /**
+     * MÉTODO FALTANDO 1:
+     * Calcula o LatLngBounds (a caixa delimitadora) que contém todos os pontos de dados coletados.
+     * Adiciona um pequeno "padding" para garantir que o heatmap não seja cortado nas bordas.
+     */
+    private LatLngBounds getBoundsFromData(List<DataPoint> dataPoints) {
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (DataPoint dp : dataPoints) {
+            builder.include(new LatLng(dp.latitude, dp.longitude));
+        }
+        LatLngBounds bounds = builder.build();
+
+        // Adiciona um pequeno padding (aprox. 10 metros)
+        return bounds.including(new LatLng(bounds.northeast.latitude + 0.0001, bounds.northeast.longitude + 0.0001))
+                .including(new LatLng(bounds.southwest.latitude - 0.0001, bounds.southwest.longitude - 0.0001));
+    }
+
+
+    /**
+     * MÉTODO FALTANDO 2:
+     * Interpola os dados de RSSI em uma grade usando Ponderação Inversa da Distância (IDW).
+     */
+    private double[][] interpolateIdw(List<DataPoint> dataPoints, LatLngBounds bounds, int gridWidth, int gridHeight) {
+        double[][] grid = new double[gridHeight][gridWidth];
+        double latStep = (bounds.northeast.latitude - bounds.southwest.latitude) / (gridHeight - 1);
+        double lngStep = (bounds.northeast.longitude - bounds.southwest.longitude) / (gridWidth - 1);
+        double power = 2.0;
+
+        for (int y = 0; y < gridHeight; y++) {
+            for (int x = 0; x < gridWidth; x++) {
+                double currentLat = bounds.southwest.latitude + y * latStep;
+                double currentLng = bounds.southwest.longitude + x * lngStep;
+                LatLng currentPoint = new LatLng(currentLat, currentLng);
+
+                double numerator = 0;
+                double denominator = 0;
+                boolean pointFoundNearby = false;
+
+                for (DataPoint dp : dataPoints) {
+                    LatLng dataPointLocation = new LatLng(dp.latitude, dp.longitude);
+                    double distance = SphericalUtil.computeDistanceBetween(currentPoint, dataPointLocation);
+
+                    if (distance == 0) {
+                        numerator = dp.rssi;
+                        denominator = 1;
+                        pointFoundNearby = true;
+                        break;
+                    }
+                    if (distance < 50) { // Raio de influência de 50m
+                        double weight = 1.0 / Math.pow(distance, power);
+                        numerator += weight * dp.rssi;
+                        denominator += weight;
+                        pointFoundNearby = true;
+                    }
+                }
+
+                if (pointFoundNearby && denominator > 0) {
+                    grid[y][x] = numerator / denominator;
+                } else {
+                    grid[y][x] = Double.NaN; // "Sem dados"
+                }
+            }
+        }
+        return grid;
+    }
+
+    /**
+     * MÉTODO FALTANDO 3:
+     * Cria um Bitmap a partir da grade interpolada, pintando cada pixel com a cor correta.
+     */
+    private Bitmap createHeatmapBitmap(double[][] grid) {
+        int height = grid.length;
+        int width = grid[0].length;
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        int[] pixels = new int[width * height];
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                // Invertemos Y
+                int pixelIndex = (height - 1 - y) * width + x;
+                double rssi = grid[y][x];
+                pixels[pixelIndex] = getRssiColor(rssi);
+            }
+        }
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
+        return bitmap;
+    }
+
+
+    /**
+     * MÉTODO FALTANDO 4:
+     * Retorna a cor ARGB exata para um determinado valor de RSSI.
+     */
+    private int getRssiColor(double rssi) {
+        if (Double.isNaN(rssi)) {
+            return Color.TRANSPARENT; // 0x00000000
+        }
+
+        int alpha = 170; // 0xAA
+
+        if (rssi >= -35) return Color.argb(alpha, 0x00, 0xFF, 0x00); // Verde Forte
+        if (rssi >= -40) return Color.argb(alpha, 0x40, 0xFF, 0x00);
+        if (rssi >= -50) return Color.argb(alpha, 0x80, 0xFF, 0x00);
+        if (rssi >= -55) return Color.argb(alpha, 0xFF, 0xFF, 0x00); // Amarelo
+        if (rssi >= -60) return Color.argb(alpha, 0xFF, 0xBF, 0x00);
+        if (rssi >= -65) return Color.argb(alpha, 0xFF, 0x80, 0x00);
+        if (rssi >= -70) return Color.argb(alpha, 0xFF, 0x40, 0x00);
+        if (rssi >= -80) return Color.argb(alpha, 0xFF, 0x00, 0x00); // Vermelho
+
+        return Color.argb(alpha, 0x80, 0x00, 0x00); // Vermelho Escuro
+    }
+
+    /**
+     * MÉTODO FALTANDO 5:
+     * Aplica um efeito de "blur" (desfoque Gaussiano) em um Bitmap.
+     */
+    private Bitmap blurBitmap(Context context, Bitmap inputBitmap, float radius) {
+        if (inputBitmap == null) return null;
+        try {
+            Bitmap outputBitmap = Bitmap.createBitmap(inputBitmap);
+            RenderScript rs = RenderScript.create(context); // Erro 5 (Cannot apply) será corrigido pela importação do Context
+            ScriptIntrinsicBlur blurScript = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+
+            Allocation inAllocation = Allocation.createFromBitmap(rs, inputBitmap);
+            Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
+
+            // Ajuste este valor (ex: 10f, 15f, 20f) para o visual desejado
+            blurScript.setRadius(15.0f);
+
+            blurScript.setInput(inAllocation);
+            blurScript.forEach(outAllocation);
+            outAllocation.copyTo(outputBitmap);
+
+            rs.destroy();
+            inAllocation.destroy();
+            outAllocation.destroy();
+            blurScript.destroy();
+
+            return outputBitmap;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return inputBitmap;
+        }
     }
 }

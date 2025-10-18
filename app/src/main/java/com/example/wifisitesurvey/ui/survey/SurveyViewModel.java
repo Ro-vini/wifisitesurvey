@@ -12,6 +12,8 @@ import com.example.wifisitesurvey.services.LocationProvider;
 import com.example.wifisitesurvey.services.WifiService;
 import java.util.List;
 
+import android.widget.Toast;
+
 public class SurveyViewModel extends AndroidViewModel {
     private final SurveyRepository repository;
     private final LocationProvider locationProvider;
@@ -63,6 +65,12 @@ public class SurveyViewModel extends AndroidViewModel {
     public void recordDataPoint(Location location) {
         if (location != null && currentSurveyId != -1) {
             int rssi = wifiService.getCurrentRssi();
+
+            // --- LINHA DE DEPURAÇÃO ---
+            // Mostra o RSSI real que está sendo coletado
+            Toast.makeText(getApplication(), "RSSI Coletado: " + rssi + " dBm", Toast.LENGTH_SHORT).show();
+            // --- FIM DA LINHA DE DEPURAÇÃO ---
+
             DataPoint dataPoint = new DataPoint();
             dataPoint.surveyId = currentSurveyId;
             dataPoint.latitude = location.getLatitude();
