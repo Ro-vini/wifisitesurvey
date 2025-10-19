@@ -1,8 +1,20 @@
 package com.example.wifisitesurvey.services;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.DhcpInfo;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
+
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.util.List;
 
 /**
  * Classe de serviço dedicada a interagir com o WifiManager do Android.
@@ -12,13 +24,15 @@ public class WifiService {
 
     private static final String TAG = "WifiService";
     private final WifiManager wifiManager;
+    private final Context context;
 
     /**
      * Construtor que inicializa o WifiManager a partir do contexto da aplicação.
      * @param context O contexto da aplicação.
      */
     public WifiService(Context context) {
-        this.wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        this.context = context.getApplicationContext(); // Armazenar context
+        this.wifiManager = (WifiManager) this.context.getSystemService(Context.WIFI_SERVICE);
     }
 
     /**
@@ -45,5 +59,48 @@ public class WifiService {
             // Retorna um valor baixo em caso de qualquer exceção
             return -100;
         }
+    }
+
+    public WifiInfo getCurrentConnection() {
+        return wifiManager.getConnectionInfo();
+    }
+
+    public List<ScanResult> scanNetworks() {
+        return wifiManager.getScanResults();
+    }
+
+    public DhcpInfo getDhcpInfo() {
+        return wifiManager.getDhcpInfo();
+    }
+
+    public String getMobileIpAddress() {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null)
+            return "N/A (CM Indisponível)";
+
+        try {
+            for (Network network : cm.getAllNetworks()) {
+                NetworkCapabilities capabilities = cm.getNetworkCapabilities(network);
+                if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    LinkProperties linkProperties = cm.getLinkProperties(network);
+                    if (linkProperties != null) {
+                        for (LinkAddress linkAddress : linkProperties.getLinkAddresses()) {
+                            InetAddress address = linkAddress.getAddress();
+
+                            // Garantir que é IPv4 e não loopback
+                            if (address instanceof Inet4Address && !address.isLoopbackAddress()) {
+                                return address.getHostAddress();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            // Log.e("WifiReportFormatter", "Erro ao obter IP móvel: " + e.getMessage());
+            return "N/A (Erro)";
+        }
+
+        return "N/A (Não encontrado)";
     }
 }
