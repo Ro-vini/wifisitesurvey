@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Update;
 
 import com.example.wifisitesurvey.data.model.DataPoint;
 import com.example.wifisitesurvey.data.model.Survey;
@@ -34,6 +35,13 @@ public interface SurveyDao {
     void insertDataPoint(DataPoint dataPoint);
 
     /**
+     * Atualiza um DataPoint existente no banco de dados.
+     * @param dataPoint O ponto de dados a ser atualizado.
+     */
+    @Update
+    void updateDataPoint(DataPoint dataPoint);
+
+    /**
      * Retorna um LiveData contendo a lista de todos os surveys salvos,
      * ordenados do mais recente para o mais antigo.
      * O LiveData notificará automaticamente a UI sobre quaisquer mudanças.
@@ -50,4 +58,14 @@ public interface SurveyDao {
      */
     @Query("SELECT * FROM data_points WHERE surveyId = :surveyId")
     LiveData<List<DataPoint>> getDataPointsForSurvey(long surveyId);
+
+    /**
+     * Encontra um DataPoint existente com base no ID do survey e na localização.
+     * @param surveyId O ID do survey.
+     * @param latitude A latitude do ponto.
+     * @param longitude A longitude do ponto.
+     * @return O DataPoint encontrado, ou null se não existir.
+     */
+    @Query("SELECT * FROM data_points WHERE surveyId = :surveyId AND latitude = :latitude AND longitude = :longitude LIMIT 1")
+    DataPoint findDataPointByLocation(long surveyId, double latitude, double longitude);
 }

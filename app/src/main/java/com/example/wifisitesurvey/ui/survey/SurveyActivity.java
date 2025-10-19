@@ -2,10 +2,11 @@ package com.example.wifisitesurvey.ui.survey;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -19,7 +20,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.wifisitesurvey.R;
@@ -34,16 +36,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.TileOverlay;
-import com.google.android.gms.maps.model.TileOverlayOptions;
 import android.graphics.Color;
-import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.SphericalUtil;
-import com.google.maps.android.heatmaps.HeatmapTileProvider;
-import com.google.maps.android.heatmaps.WeightedLatLng;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.provider.MediaStore;
@@ -52,7 +48,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 // Adicione esta importação no topo (necessária para os novos métodos)
-import android.graphics.drawable.BitmapDrawable;
 import com.google.android.gms.maps.model.LatLngBounds;
 
 import android.renderscript.Allocation;
@@ -126,6 +121,42 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
+
+        // 1. Encontre o layout pelo ID que você definiu no XML
+        View mainLayout = findViewById(R.id.survey_container);
+
+        // 2. Adicione um listener que é chamado quando as "bordas" da tela do sistema mudam
+        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
+            // 3. Verifique a altura da barra de navegação na parte inferior
+            int tappableBottomInset = insets.getInsets(WindowInsetsCompat.Type.tappableElement()).bottom;
+
+            // 4. Se a altura for maior que zero, significa que os botões estão visíveis
+            if (tappableBottomInset > 0) {
+                Log.d("NavigationMode", "Navegação por botões detectada. Aplicando padding.");
+
+                // 5. Converta os valores de DP para Pixels usando o método padrão do Android
+                /*int paddingTopPx = (int) TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());*/
+                int paddingBottomPx = (int) TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics());
+
+
+                // 6. Mantenha o padding original da esquerda e direita e aplique os novos de topo e base
+                v.setPadding(
+                        v.getPaddingLeft(),
+                        v.getPaddingTop(),
+                        //paddingTopPx,
+                        v.getPaddingRight(),
+                        paddingBottomPx
+                );
+            } else {
+                Log.d("NavigationMode", "Navegação por gestos detectada. Nenhum padding extra aplicado.");
+                // Se for navegação por gestos, não fazemos nada, mantendo o padding do XML.
+            }
+
+            // Retorne os insets para que o sistema continue o processamento
+            return insets;
+        });
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 

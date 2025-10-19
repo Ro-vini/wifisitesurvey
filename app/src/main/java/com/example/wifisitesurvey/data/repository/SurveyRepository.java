@@ -63,4 +63,28 @@ public class SurveyRepository {
     public LiveData<List<DataPoint>> getDataPointsForSurvey(long surveyId) {
         return surveyDao.getDataPointsForSurvey(surveyId);
     }
+
+    /**
+     * Insere um novo DataPoint ou atualiza um existente com a mesma localização (latitude/longitude).
+     * Esta operação é conhecida como "upsert".
+     * @param dataPoint O ponto de dados a ser salvo.
+     */
+    public void upsertDataPoint(DataPoint dataPoint) {
+        databaseExecutor.execute(() -> {
+            DataPoint existingPoint = surveyDao.findDataPointByLocation(
+                    dataPoint.surveyId,
+                    dataPoint.latitude,
+                    dataPoint.longitude
+            );
+
+            if (existingPoint != null) {
+                // Se o ponto já existe, atualiza o RSSI e salva.
+                existingPoint.rssi = dataPoint.rssi;
+                surveyDao.updateDataPoint(existingPoint);
+            } else {
+                // Se o ponto é novo, insere-o.
+                surveyDao.insertDataPoint(dataPoint);
+            }
+        });
+    }
 }

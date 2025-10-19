@@ -2,8 +2,10 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/survey_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingHorizontal="16dp"
     tools:context=".ui.survey.SurveyActivity">
 
     <androidx.fragment.app.FragmentContainerView
@@ -38,11 +40,9 @@
         android:padding="16dp"
         android:visibility="gone"
         tools:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/layout_controls"
+        app:layout_constraintBottom_toTopOf="@id/layout_controls_scroll"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:paddingTop="35dp"
-        android:paddingBottom="50dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -87,62 +87,65 @@
     </LinearLayout>
 
 
-    <LinearLayout
-        android:id="@+id/layout_controls"
+    <HorizontalScrollView
+        android:id="@+id/layout_controls_scroll"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="8dp"
         android:background="#80000000"
+        android:scrollbars="none"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:paddingTop="35dp"
-        android:paddingBottom="50dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/btn_place_floorplan"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Planta"
-            android:textColor="@android:color/white"
-            app:icon="@android:drawable/ic_menu_gallery"
-            app:iconTint="@android:color/white"/>
+        <LinearLayout
+            android:id="@+id/layout_controls"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/btn_edit_floorplan"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Editar"
-            android:textColor="@android:color/white"
-            app:icon="@android:drawable/ic_menu_edit"
-            app:iconTint="@android:color/white"
-            android:visibility="invisible" />
+            <Button
+                android:id="@+id/btn_place_floorplan"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Planta"
+                android:textColor="@android:color/white"
+                app:icon="@android:drawable/ic_menu_gallery"
+                app:iconTint="@android:color/white"/>
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <Button
+                android:id="@+id/btn_edit_floorplan"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Editar"
+                android:textColor="@android:color/white"
+                app:icon="@android:drawable/ic_menu_edit"
+                app:iconTint="@android:color/white" />
 
-        <Button
-            android:id="@+id/btn_start_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Iniciar"
-            style="@style/Widget.MaterialComponents.Button" />
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/btn_generate_heatmap"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Heatmap"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            app:strokeColor="?attr/colorPrimary" />
-    </LinearLayout>
+            <Button
+                android:id="@+id/btn_start_stop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Iniciar"
+                style="@style/Widget.MaterialComponents.Button" />
+
+            <Button
+                android:id="@+id/btn_generate_heatmap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Heatmap"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:strokeColor="?attr/colorPrimary" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
     <Button
         android:id="@+id/btn_confirm_point"
@@ -152,7 +155,7 @@
         android:text="Confirmar Ponto no Mapa"
         android:visibility="gone"
         tools:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/layout_controls"
+        app:layout_constraintBottom_toTopOf="@id/layout_controls_scroll"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

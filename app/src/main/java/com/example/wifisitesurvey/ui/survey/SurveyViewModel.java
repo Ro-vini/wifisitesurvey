@@ -76,7 +76,7 @@ public class SurveyViewModel extends AndroidViewModel {
             dataPoint.latitude = location.getLatitude();
             dataPoint.longitude = location.getLongitude();
             dataPoint.rssi = rssi;
-            repository.insertDataPoint(dataPoint);
+            repository.upsertDataPoint(dataPoint);
         }
     }
 
