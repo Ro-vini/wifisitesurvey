@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -27,6 +28,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.wifisitesurvey.R;
 import com.example.wifisitesurvey.data.model.DataPoint;
 import com.example.wifisitesurvey.ui.main.MainActivity;
+import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 import com.example.wifisitesurvey.utils.PermissionUtils;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -122,41 +124,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
 
-        // 1. Encontre o layout pelo ID que você definiu no XML
         View mainLayout = findViewById(R.id.survey_container);
-
-        // 2. Adicione um listener que é chamado quando as "bordas" da tela do sistema mudam
-        ViewCompat.setOnApplyWindowInsetsListener(mainLayout, (v, insets) -> {
-            // 3. Verifique a altura da barra de navegação na parte inferior
-            int tappableBottomInset = insets.getInsets(WindowInsetsCompat.Type.tappableElement()).bottom;
-
-            // 4. Se a altura for maior que zero, significa que os botões estão visíveis
-            if (tappableBottomInset > 0) {
-                Log.d("NavigationMode", "Navegação por botões detectada. Aplicando padding.");
-
-                // 5. Converta os valores de DP para Pixels usando o método padrão do Android
-                /*int paddingTopPx = (int) TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, 35, getResources().getDisplayMetrics());*/
-                int paddingBottomPx = (int) TypedValue.applyDimension(
-                        TypedValue.COMPLEX_UNIT_DIP, 50, getResources().getDisplayMetrics());
-
-
-                // 6. Mantenha o padding original da esquerda e direita e aplique os novos de topo e base
-                v.setPadding(
-                        v.getPaddingLeft(),
-                        v.getPaddingTop(),
-                        //paddingTopPx,
-                        v.getPaddingRight(),
-                        paddingBottomPx
-                );
-            } else {
-                Log.d("NavigationMode", "Navegação por gestos detectada. Nenhum padding extra aplicado.");
-                // Se for navegação por gestos, não fazemos nada, mantendo o padding do XML.
-            }
-
-            // Retorne os insets para que o sistema continue o processamento
-            return insets;
-        });
+        EdgeToEdgeUtils.setupEdgeToEdge(mainLayout);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -197,6 +166,19 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         seekbarRotation = findViewById(R.id.seekbar_rotation);
         btnEditFloorplan = findViewById(R.id.btn_edit_floorplan);
         btnDoneEditing = findViewById(R.id.btn_done_editing);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Desativa o botão logo ao entrar na tela
+        startStopButton.setEnabled(false);
+
+        // Reativa após 5 segundos
+        new android.os.Handler(Looper.getMainLooper()).postDelayed(() -> {
+            startStopButton.setEnabled(true);
+        }, 5000);
     }
 
     @Override
@@ -277,6 +259,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         startStopButton.setOnClickListener(v -> {
             if (PermissionUtils.isLocationPermissionGranted(this)) {
                 viewModel.toggleTracking();
+                startStopButton.setEnabled(false); // desativa imediatamente
+
+                // Reativa após 5 segundos
+                new android.os.Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    startStopButton.setEnabled(true);
+                }, 5000);
             } else {
                 Toast.makeText(this, "Conceda a permissão de localização para iniciar.", Toast.LENGTH_SHORT).show();
                 checkLocationPermission();

@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
 import com.example.wifisitesurvey.ui.main.MainActivity;
+import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +46,10 @@ public class MetricsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_metrics);
 
-        // Encontre o layout raiz (que você deu o ID no XML)
         constraintLayout = findViewById(R.id.activity_metrics_root);
+        EdgeToEdgeUtils.setupEdgeToEdge(constraintLayout);
+
+        // Encontre o layout raiz (que você deu o ID no XML)
         btnScan = findViewById(R.id.btnScan);
         btnDeepAnalysis = findViewById(R.id.btnDeepAnalysis);
         rvNetworks = findViewById(R.id.rvNetworks);
