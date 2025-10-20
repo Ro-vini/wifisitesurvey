@@ -27,7 +27,6 @@ public class LocationProvider {
     private static final String TAG = "LocationProvider";
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 500; // 0,5 segundos (antes estava 5000)
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 500; // 0,5 segundos (antes estava 2000)
-
     private final FusedLocationProviderClient fusedLocationClient;
     private final MutableLiveData<Location> locationLiveData = new MutableLiveData<>();
     private final LocationRequest locationRequest;

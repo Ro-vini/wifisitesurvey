@@ -44,7 +44,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                    tools:text="📡 SSID: MinhaRede" />
+                    tools:text="SSID: MinhaRede" />
 
                 <TextView
                     android:id="@+id/tvItemBssid"
@@ -52,7 +52,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="monospace"
                     android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    tools:text="🔗 BSSID: 00:11:22:33:44:55" />
+                    tools:text="BSSID: 00:11:22:33:44:55" />
             </LinearLayout>
 
             <ImageView
@@ -84,7 +84,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-                tools:text="📶 RSSI: -55 dBm\nQualidade: 80%\n🚀 Velocidade: 120 Mbps" />
+                tools:text="RSSI: -55 dBm\nQualidade: 80%\nVelocidade: 120 Mbps" />
 
             <TextView
                 android:id="@+id/tvItemCollision"
@@ -96,7 +96,7 @@
                 android:fontFamily="monospace"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 android:visibility="gone"
-                tools:text="⚠️ Análise de Colisão:\nCanal 6 ocupado por 3 redes."
+                tools:text="Análise de Colisão:\nCanal 6 ocupado por 3 redes."
                 tools:visibility="visible" />
 
         </LinearLayout>

@@ -25,16 +25,16 @@ public class WifiReportFormatter {
         if (scan == null) return "Sem dados de scan.";
 
         StringBuilder sb = new StringBuilder();
-        sb.append("📶 RSSI: ").append(scan.level).append(" dBm (")
+        sb.append("RSSI: ").append(scan.level).append(" dBm (")
                 .append(analyzer.classifySignal(scan.level)).append(")");
         sb.append("\nQualidade: ").append(analyzer.calculateSignalQuality(scan.level)).append("%");
-        sb.append("\n📡 Modo: ").append(analyzer.mapWifiStandard(scan));
-        sb.append("\n🔒 Segurança: ").append(analyzer.getSecurityType(scan.capabilities));
-        sb.append("\n📐 Largura de Canal: ").append(analyzer.mapChannelWidth(scan));
-        sb.append("\n📻 Frequência: ").append(scan.frequency).append(" MHz / ").append(analyzer.getSignalType(scan.frequency));
+        sb.append("\nModo: ").append(analyzer.mapWifiStandard(scan));
+        sb.append("\nSegurança: ").append(analyzer.getSecurityType(scan.capabilities));
+        sb.append("\nLargura de Canal: ").append(analyzer.mapChannelWidth(scan));
+        sb.append("\nFrequência: ").append(scan.frequency).append(" MHz / ").append(analyzer.getSignalType(scan.frequency));
 
         int channel = analyzer.frequencyToChannel(scan.frequency);
-        sb.append("\n📺 Canal: ").append(channel >= 0 ? channel : "Desconhecido");
+        sb.append("\nCanal: ").append(channel >= 0 ? channel : "Desconhecido");
 
         return sb.toString();
     }
@@ -46,8 +46,8 @@ public class WifiReportFormatter {
         if (info == null) return "";
 
         StringBuilder sb = new StringBuilder();
-        sb.append("\n💚 Saúde da rede: ").append(health).append("%");
-        sb.append("\n🚀 Velocidade: ").append(info.getLinkSpeed()).append(" Mbps");
+        sb.append("\nSaúde da rede: ").append(health).append("%");
+        sb.append("\nVelocidade: ").append(info.getLinkSpeed()).append(" Mbps");
 
         String wifiIp = "N/A";
         if (dhcp != null && dhcp.ipAddress != 0) {
@@ -56,12 +56,12 @@ public class WifiReportFormatter {
             wifiIp = analyzer.formatIpAddress(info.getIpAddress());
         }
 
-        sb.append("\n🌐 IP (Wi-Fi): ").append(wifiIp);
-        sb.append("\n📱 IP (Dados Móveis): ").append(mobileIpAddress);
+        sb.append("\nIP (Wi-Fi): ").append(wifiIp);
+        sb.append("\nIP (Dados Móveis): ").append(mobileIpAddress);
 
         String pingTarget = "8.8.8.8";
         String pingResult = new ShellPingService().pingHost(pingTarget);
-        sb.append("\n🏓 ").append(pingResult);
+        sb.append("\n").append(pingResult);
 
         return sb.toString();
     }
@@ -94,11 +94,11 @@ public class WifiReportFormatter {
         }
 
         if (collidingSsids.isEmpty()) {
-            return "✅ Nenhuma outra rede detectada no canal " + currentChannel + ".";
+            return "Nenhuma outra rede detectada no canal " + currentChannel + ".";
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("⚠️ Análise de Colisão (Canal ").append(currentChannel).append("):\n");
+        sb.append("⚠Análise de Colisão (Canal ").append(currentChannel).append("):\n");
         sb.append("    Concorrendo com ").append(collidingSsids.size()).append(" outra(s) rede(s):\n");
         for (String ssid : collidingSsids) {
             sb.append("   ").append(ssid).append("\n");

@@ -70,8 +70,8 @@ public class NetworkAdapter extends RecyclerView.Adapter<NetworkAdapter.NetworkV
         }
 
         public void bind(NetworkItem item) {
-            tvSsid.setText("📡 SSID: " + item.getSsid());
-            tvBssid.setText("🔗 BSSID: " + item.getBssid());
+            tvSsid.setText("SSID: " + item.getSsid());
+            tvBssid.setText("BSSID: " + item.getBssid());
             tvDetails.setText(item.getDetails());
 
             // Ícone: 'ic_network_check' para rede atual, 'ic_wifi' para as demais

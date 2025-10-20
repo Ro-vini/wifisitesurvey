@@ -17,10 +17,10 @@ public class WifiAnalyzer {
     }
 
     public String classifySignal(int rssi) {
-        if (rssi <= -90) return "📉 Muito fraco";
-        if (rssi <= -80) return "📶 Fraco";
-        if (rssi <= -67) return "📡 Bom";
-        return "🚀 Excelente";
+        if (rssi <= -90) return "Muito fraco";
+        if (rssi <= -80) return "Fraco";
+        if (rssi <= -67) return "Bom";
+        return "Excelente";
     }
 
     public String mapWifiStandard(ScanResult sr) {

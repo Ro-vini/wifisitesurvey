@@ -534,9 +534,14 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         }
         LatLngBounds bounds = builder.build();
 
-        // Adiciona um pequeno padding (aprox. 10 metros)
-        return bounds.including(new LatLng(bounds.northeast.latitude + 0.0001, bounds.northeast.longitude + 0.0001))
-                .including(new LatLng(bounds.southwest.latitude - 0.0001, bounds.southwest.longitude - 0.0001));
+        // --- CORREÇÃO PRINCIPAL AQUI ---
+        // Nosso raio de influência no IDW é de 50 metros.
+        // Vamos adicionar um padding de 60 metros (aprox 0.00055 graus)
+        // para garantir que a "caixa" tenha uma borda transparente.
+        double padding = 0.00055;
+
+        return bounds.including(new LatLng(bounds.northeast.latitude + padding, bounds.northeast.longitude + padding))
+                .including(new LatLng(bounds.southwest.latitude - padding, bounds.southwest.longitude - padding));
     }
 
 
@@ -570,7 +575,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                         pointFoundNearby = true;
                         break;
                     }
-                    if (distance < 50) { // Raio de influência de 50m
+                    if (distance < 1) { // ALTERAR AQUI TAMANHO DAS MEDIÇÕES HEATMAP (BOLOTAS)
                         double weight = 1.0 / Math.pow(distance, power);
                         numerator += weight * dp.rssi;
                         denominator += weight;
@@ -616,22 +621,47 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
      * Retorna a cor ARGB exata para um determinado valor de RSSI.
      */
     private int getRssiColor(double rssi) {
+        // Se o valor for "sem dados" (NaN), retorna transparente
         if (Double.isNaN(rssi)) {
             return Color.TRANSPARENT; // 0x00000000
         }
 
-        int alpha = 170; // 0xAA
+        int baseAlpha = 170; // 0xAA (Nossa opacidade padrão)
 
-        if (rssi >= -35) return Color.argb(alpha, 0x00, 0xFF, 0x00); // Verde Forte
-        if (rssi >= -40) return Color.argb(alpha, 0x40, 0xFF, 0x00);
-        if (rssi >= -50) return Color.argb(alpha, 0x80, 0xFF, 0x00);
-        if (rssi >= -55) return Color.argb(alpha, 0xFF, 0xFF, 0x00); // Amarelo
-        if (rssi >= -60) return Color.argb(alpha, 0xFF, 0xBF, 0x00);
-        if (rssi >= -65) return Color.argb(alpha, 0xFF, 0x80, 0x00);
-        if (rssi >= -70) return Color.argb(alpha, 0xFF, 0x40, 0x00);
-        if (rssi >= -80) return Color.argb(alpha, 0xFF, 0x00, 0x00); // Vermelho
+        // --- 1. ZONA DE COR SÓLIDA ---
+        // Se o sinal for -80dBm ou mais forte, retorna a cor sólida.
+        if (rssi >= -35) return Color.argb(baseAlpha, 0x00, 0xFF, 0x00); // Verde Forte
+        if (rssi >= -40) return Color.argb(baseAlpha, 0x40, 0xFF, 0x00);
+        if (rssi >= -50) return Color.argb(baseAlpha, 0x80, 0xFF, 0x00);
+        if (rssi >= -55) return Color.argb(baseAlpha, 0xFF, 0xFF, 0x00); // Amarelo
+        if (rssi >= -60) return Color.argb(baseAlpha, 0xFF, 0xBF, 0x00);
+        if (rssi >= -65) return Color.argb(baseAlpha, 0xFF, 0x80, 0x00);
+        if (rssi >= -70) return Color.argb(baseAlpha, 0xFF, 0x40, 0x00);
+        if (rssi >= -80) return Color.argb(baseAlpha, 0xFF, 0x00, 0x00); // Vermelho
 
-        return Color.argb(alpha, 0x80, 0x00, 0x00); // Vermelho Escuro
+
+        // --- 2. ZONA DE DESBOTAMENTO (FADE-OUT) ---
+        // Se chegamos aqui, o RSSI está abaixo de -80 dBm.
+        // Vamos desbotar do "Vermelho Escuro" para "Transparente"
+        // na faixa de -80 dBm até -90 dBm.
+
+        double fadeStartRssi = -80.0;
+        double fadeEndRssi = -90.0; // Ponto onde fica 100% transparente
+
+        if (rssi <= fadeEndRssi) {
+            return Color.TRANSPARENT; // Abaixo de -90, totalmente transparente
+        }
+
+        // Estamos na zona de desbotamento (entre -80 e -90)
+        // Mapeia o RSSI para uma porcentagem de 0.0 (em -90) a 1.0 (em -80)
+        // Ex: RSSI de -85 -> ((-85) - (-90)) / ((-80) - (-90)) = 5 / 10 = 0.5 (50%)
+        double percentage = (rssi - fadeEndRssi) / (fadeStartRssi - fadeEndRssi);
+
+        // O novo alfa será uma porcentagem do nosso alfa base
+        int newAlpha = (int) (baseAlpha * percentage);
+
+        // A cor será a nossa cor mais fraca (Vermelho Escuro)
+        return Color.argb(newAlpha, 0x80, 0x00, 0x00);
     }
 
     /**
@@ -648,8 +678,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Allocation inAllocation = Allocation.createFromBitmap(rs, inputBitmap);
             Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
 
-            // Ajuste este valor (ex: 10f, 15f, 20f) para o visual desejado
-            blurScript.setRadius(15.0f);
+            // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DOS HEATMAP GERADO
+            blurScript.setRadius(0.2f);
 
             blurScript.setInput(inAllocation);
             blurScript.forEach(outAllocation);
