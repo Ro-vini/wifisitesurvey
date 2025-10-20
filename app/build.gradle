@@ -59,6 +59,4 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
 
-    // Threading simples para operações de banco de dados
-    implementation 'com.google.guava:guava:32.1.3-android'
 }
