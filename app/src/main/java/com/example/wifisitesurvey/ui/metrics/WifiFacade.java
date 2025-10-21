@@ -11,7 +11,10 @@ import com.example.wifisitesurvey.utils.WifiAnalyzer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WifiFacade {
     private final WifiService wifiService;
@@ -109,5 +112,109 @@ public class WifiFacade {
             }
         }
         return null;
+    }
+
+    /**
+     * Constrói a lista de SsidGroupItems para o RecyclerView.
+     * Deve ser chamado DEPOIS de performScan().
+     */
+    public List<SsidGroupItem> buildSsidGroups() {
+        List<SsidGroupItem> groupItems = new ArrayList<>();
+        if (scans == null) {
+            scans = new ArrayList<>(); // Evitar NullPointerException
+        }
+
+        // 1. Agrupar ScanResults por SSID
+        Map<String, List<ScanResult>> scansBySsid = new HashMap<>();
+        for (ScanResult sr : scans) {
+            String ssid = (sr.SSID == null || sr.SSID.isEmpty()) ? "<Oculto>" : sr.SSID;
+            if (!scansBySsid.containsKey(ssid)) {
+                scansBySsid.put(ssid, new ArrayList<>());
+            }
+            scansBySsid.get(ssid).add(sr);
+        }
+
+        String currentSsid = (current != null && current.getSSID() != null) ?
+                current.getSSID().replace("\"", "") :
+                null;
+        if (currentSsid != null && currentSsid.isEmpty()) {
+            currentSsid = "<unknown ssid>";
+        }
+
+        // 2. Criar o SsidGroupItem para a rede ATUAL (se conectada)
+        if (currentSsid != null && scansBySsid.containsKey(currentSsid)) {
+            groupItems.add(createSsidGroup(
+                    currentSsid,
+                    scansBySsid.get(currentSsid),
+                    true // é a rede atual
+            ));
+            // Remover da lista para não adicionar de novo
+            scansBySsid.remove(currentSsid);
+        }
+
+        // 3. Ordenar os SSIDs restantes alfabeticamente
+        List<String> sortedSsids = new ArrayList<>(scansBySsid.keySet());
+        Collections.sort(sortedSsids, String::compareToIgnoreCase);
+
+        // 4. Criar SsidGroupItems para as outras redes
+        for (String ssid : sortedSsids) {
+            groupItems.add(createSsidGroup(
+                    ssid,
+                    scansBySsid.get(ssid),
+                    false // não é a rede atual
+            ));
+        }
+
+        return groupItems;
+    }
+
+    /**
+     * Método auxiliar para criar um SsidGroupItem.
+     */
+    private SsidGroupItem createSsidGroup(String ssid, List<ScanResult> scansInGroup, boolean isCurrentGroup) {
+
+        // Ordenar os BSSIDs dentro do grupo por BSSID
+        scansInGroup.sort(new Comparator<ScanResult>() {
+            @Override
+            public int compare(ScanResult sr1, ScanResult sr2) {
+                String currentBssid = (current != null) ? current.getBSSID() : null;
+
+                // A lógica de priorização só se aplica se for o grupo da rede atual
+                if (isCurrentGroup && currentBssid != null) {
+                    boolean isSr1Current = sr1.BSSID.equals(currentBssid);
+                    boolean isSr2Current = sr2.BSSID.equals(currentBssid);
+
+                    if (isSr1Current && !isSr2Current) {
+                        return -1; // sr1 (o atual) vem antes
+                    }
+                    if (!isSr1Current && isSr2Current) {
+                        return 1;  // sr2 (o atual) vem antes (coloca o sr1 depois)
+                    }
+                }
+
+                // Se nenhum for o atual, ou se não for o grupo atual, ordena alfabeticamente
+                return sr1.BSSID.compareToIgnoreCase(sr2.BSSID);
+            }
+        });
+
+        List<BssidInfo> bssidInfoList = new ArrayList<>();
+
+        for (ScanResult sr : scansInGroup) {
+            String details = formatter.formatNetworkDetails(sr);
+            String collisionReport = null;
+
+            // Se for a rede atual, adicionar os extras
+            if (isCurrentGroup && current != null && sr.BSSID.equals(current.getBSSID())) {
+                String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp, mobile);
+                details += "\n" + extraDetails;
+
+                // Adicionar colisão SOMENTE ao BSSID específico ao qual estamos conectados
+                collisionReport = formatter.formatCollisionsForCurrentChannel(current, this.scans);
+            }
+
+            bssidInfoList.add(new BssidInfo(sr.BSSID, details, collisionReport));
+        }
+
+        return new SsidGroupItem(ssid, isCurrentGroup, bssidInfoList);
     }
 }

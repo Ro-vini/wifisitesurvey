@@ -11,6 +11,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,11 +35,9 @@ import java.util.List;
 public class MetricsActivity extends AppCompatActivity {
 
     private Button btnScan;
-    private Button btnDeepAnalysis;
     private RecyclerView rvNetworks;
     private WifiFacade wifiFacade;
-    private NetworkAdapter networkAdapter;
-
+    private SsidGroupAdapter ssidGroupAdapter;
     private ConstraintLayout constraintLayout;
     private boolean isInitialState = true;
 
@@ -51,7 +53,6 @@ public class MetricsActivity extends AppCompatActivity {
 
         // Encontre o layout raiz (que você deu o ID no XML)
         btnScan = findViewById(R.id.btnScan);
-        btnDeepAnalysis = findViewById(R.id.btnDeepAnalysis);
         rvNetworks = findViewById(R.id.rvNetworks);
 
         wifiFacade = new WifiFacade(this);
@@ -61,18 +62,14 @@ public class MetricsActivity extends AppCompatActivity {
 
         // Configurar Listeners
         btnScan.setOnClickListener(v -> checkPermissionsAndScan());
-
-        btnDeepAnalysis.setOnClickListener(v -> {
-            Intent intent = new Intent(MetricsActivity.this, MainActivity.class);
-            startActivity(intent);
-            Toast.makeText(this, "Indo para Análise Profunda...", Toast.LENGTH_SHORT).show();
-        });
     }
 
     private void setupRecyclerView() {
-        networkAdapter = new NetworkAdapter(this);
+        // networkAdapter = new NetworkAdapter(this); // LINHA ANTIGA
+        ssidGroupAdapter = new SsidGroupAdapter(this); // NOVA LINHA
         rvNetworks.setLayoutManager(new LinearLayoutManager(this));
-        rvNetworks.setAdapter(networkAdapter);
+        // rvNetworks.setAdapter(networkAdapter); // LINHA ANTIGA
+        rvNetworks.setAdapter(ssidGroupAdapter); // NOVA LINHA
     }
 
     private void checkPermissionsAndScan() {
@@ -132,33 +129,34 @@ public class MetricsActivity extends AppCompatActivity {
             constraintSet.applyTo(constraintLayout);
 
             rvNetworks.setVisibility(View.VISIBLE);
-            btnDeepAnalysis.setVisibility(View.VISIBLE);
         }
 
         btnScan.setEnabled(false);
         btnScan.setText("Verificando...");
-        networkAdapter.setNetworkList(new ArrayList<>());
+        // networkAdapter.setNetworkList(new ArrayList<>()); // LINHA ANTIGA
+        ssidGroupAdapter.setSsidGroups(new ArrayList<>()); // NOVA LINHA
     }
 
     private void scanAndDisplay() {
         updateUiToScanningState();
 
         new Thread(() -> {
-            // Executa o scan
             wifiFacade.performScan();
-
-            // Constrói a lista de itens
-            final List<NetworkItem> networkItems = wifiFacade.buildNetworkItems();
+            final List<SsidGroupItem> groupItems = wifiFacade.buildSsidGroups();
 
             // Atualiza a UI
             runOnUiThread(() -> {
-                networkAdapter.setNetworkList(networkItems);
+                // networkAdapter.setNetworkList(networkItems); // LINHA ANTIGA
+                ssidGroupAdapter.setSsidGroups(groupItems); // NOVA LINHA
+
                 btnScan.setEnabled(true);
                 btnScan.setText("Verificar Novamente");
 
-                if (networkItems.isEmpty()) {
+                // if (networkItems.isEmpty()) { // LINHA ANTIGA
+                if (groupItems.isEmpty()) { // NOVA LINHA
                     Toast.makeText(this, "Nenhuma rede Wi-Fi encontrada.", Toast.LENGTH_SHORT).show();
                 }
+
             });
         }).start();
     }

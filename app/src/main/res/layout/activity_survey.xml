@@ -5,7 +5,6 @@
     android:id="@+id/survey_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingHorizontal="16dp"
     tools:context=".ui.survey.SurveyActivity">
 
     <androidx.fragment.app.FragmentContainerView

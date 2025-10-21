@@ -5,8 +5,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="16dp"
-    android:paddingTop="35dp"
     app:cardElevation="2dp"
     app:cardCornerRadius="8dp"
     app:cardUseCompatPadding="true"
@@ -16,47 +14,27 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <LinearLayout
+            android:id="@+id/llBssidHeader"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/ivIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="16dp"
-                android:src="@drawable/ic_wifi"
-                app:tint="?attr/colorPrimary" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvBssidHeader"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tvItemSsid"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
-                    tools:text="SSID: MinhaRede" />
-
-                <TextView
-                    android:id="@+id/tvItemBssid"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    tools:text="BSSID: 00:11:22:33:44:55" />
-            </LinearLayout>
+                android:textAppearance="@style/TextAppearance.Material3.TitleSmall"
+                android:fontFamily="monospace"
+                tools:text="BSSID: 00:11:22:33:44:55" />
 
             <ImageView
-                android:id="@+id/ivExpandArrow"
+                android:id="@+id/ivBssidExpandArrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_keyboard_arrow_down" />
@@ -64,11 +42,13 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/llDetails"
+            android:id="@+id/llBssidDetailsContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="16dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="16dp"
             android:visibility="gone"
             tools:visibility="visible">
 
@@ -79,7 +59,7 @@
                 android:layout_marginBottom="16dp"/>
 
             <TextView
-                android:id="@+id/tvItemDetails"
+                android:id="@+id/tvBssidDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
@@ -87,7 +67,7 @@
                 tools:text="RSSI: -55 dBm\nQualidade: 80%\nVelocidade: 120 Mbps" />
 
             <TextView
-                android:id="@+id/tvItemCollision"
+                android:id="@+id/tvBssidCollision"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -96,7 +76,7 @@
                 android:fontFamily="monospace"
                 android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                 android:visibility="gone"
-                tools:text="Análise de Colisão:\nCanal 6 ocupado por 3 redes."
+                tools:text="Análise de Colisão..."
                 tools:visibility="visible" />
 
         </LinearLayout>
