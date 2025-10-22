@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
+import com.example.wifisitesurvey.ui.main.MainActivity;
 import com.example.wifisitesurvey.ui.survey.SurveyActivity;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
@@ -85,7 +86,7 @@ public class BssidDetailActivity extends AppCompatActivity {
             btnDeepAnalysis.setOnClickListener(v -> {
                 // Coloque a lógica para abrir sua MainActivity aqui
                 // Exemplo:
-                Intent intent = new Intent(BssidDetailActivity.this, SurveyActivity.class);
+                Intent intent = new Intent(BssidDetailActivity.this, MainActivity.class);
                 startActivity(intent);
             });
         } else {

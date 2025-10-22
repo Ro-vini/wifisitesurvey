@@ -5,6 +5,7 @@
     android:id="@+id/survey_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingTop="35dp"
     tools:context=".ui.survey.SurveyActivity">
 
     <androidx.fragment.app.FragmentContainerView
@@ -16,6 +17,41 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Medidores RSSI e Velocidade -->
+    <LinearLayout
+        android:id="@+id/layoutIndicators"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="left"
+        app:layout_constraintBottom_toTopOf="@id/layout_controls_scroll">
+
+        <!-- Círculo RSSI -->
+        <TextView
+            android:id="@+id/textRssi"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:gravity="center"
+            android:text="RSSI\n-67 dBm"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:background="@drawable/circle_rssi"
+            android:layout_margin="8dp" />
+
+        <!-- Círculo Velocidade -->
+        <TextView
+            android:id="@+id/textSpeed"
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:gravity="center"
+            android:text="Speed\n1200 Mbps"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:background="@drawable/circle_speed"
+            android:layout_margin="8dp" />
+    </LinearLayout>
+
 
     <ImageView
         android:id="@+id/image_view_crosshair"

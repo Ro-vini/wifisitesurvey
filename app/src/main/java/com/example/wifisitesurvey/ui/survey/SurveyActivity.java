@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -27,6 +29,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.wifisitesurvey.R;
 import com.example.wifisitesurvey.data.model.DataPoint;
+import com.example.wifisitesurvey.services.WifiService;
 import com.example.wifisitesurvey.ui.main.MainActivity;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 import com.example.wifisitesurvey.utils.PermissionUtils;
@@ -67,6 +70,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     private GroundOverlay heatmapOverlay;
     private GroundOverlay floorplanOverlay;
     private FusedLocationProviderClient fusedLocationClient; // << ADICIONE ESTA LINHA
+    private WifiService wifiService;
 
     // Views do Layout
     private Button startStopButton, generateHeatmapButton, btnConfirmPoint;
@@ -74,6 +78,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     private ImageView crosshair;
     private LinearLayout layoutControls, layoutEditFloorplan;
     private SeekBar seekbarSize, seekbarRotation;
+    private TextView textViewRssi;
+    private TextView textViewSpeed;
 
     // Estado e Lógica
     private boolean isEditingFloorplan = false;
@@ -128,6 +134,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         EdgeToEdgeUtils.setupEdgeToEdge(mainLayout);
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        wifiService = new WifiService(this);
 
         // Configuração inicial do ViewModel e dados do Survey
         viewModel = new ViewModelProvider(this).get(SurveyViewModel.class);
@@ -160,6 +167,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         btnPlaceFloorplan = findViewById(R.id.btn_place_floorplan);
         crosshair = findViewById(R.id.image_view_crosshair);
         layoutControls = findViewById(R.id.layout_controls);
+        textViewRssi = findViewById(R.id.textRssi);
+        textViewSpeed = findViewById(R.id.textSpeed);
         // Views do Modo de Edição
         layoutEditFloorplan = findViewById(R.id.layout_edit_floorplan);
         seekbarSize = findViewById(R.id.seekbar_size);
@@ -239,18 +248,21 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             generateHeatmapButton.setVisibility(isTracking ? View.GONE : View.VISIBLE);
             btnPlaceFloorplan.setVisibility(isTracking ? View.GONE : View.VISIBLE);
             btnEditFloorplan.setVisibility(isTracking ? View.GONE : View.VISIBLE);
+            textViewRssi.setVisibility(isTracking ? View.VISIBLE : View.GONE);
+            textViewSpeed.setVisibility(isTracking ? View.VISIBLE : View.GONE);
         });
 
         viewModel.getLiveLocation().observe(this, location -> {
-            //if (location != null && !isInitialCameraMoveDone) {
-            //    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-            //           new LatLng(location.getLatitude(), location.getLongitude()), 19f
-            //    ));
-            //    isInitialCameraMoveDone = true;
-            //}
-
             if (viewModel.getIsTracking().getValue() != null && viewModel.getIsTracking().getValue()) {
                 viewModel.recordDataPoint(location);
+
+                WifiInfo wifiInfo = wifiService.getCurrentConnection();
+                if (wifiInfo != null) {
+                    int rssi = wifiInfo.getRssi();
+                    int linkSpeed = wifiInfo.getLinkSpeed();
+                    textViewRssi.setText(String.format("RSSI\n %d dBm", rssi));
+                    textViewSpeed.setText(String.format("Speed\n %d Mbps", linkSpeed));
+                }
             }
         });
     }

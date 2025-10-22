@@ -13,4 +13,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
 AndroidManifest.xml
+
+libs.versions.toml
+studiobot.xml
+deviceManager.xml
