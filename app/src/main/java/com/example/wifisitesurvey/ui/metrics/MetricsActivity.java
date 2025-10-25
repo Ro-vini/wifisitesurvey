@@ -65,11 +65,9 @@ public class MetricsActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        // networkAdapter = new NetworkAdapter(this); // LINHA ANTIGA
-        ssidGroupAdapter = new SsidGroupAdapter(this); // NOVA LINHA
+        ssidGroupAdapter = new SsidGroupAdapter(this);
         rvNetworks.setLayoutManager(new LinearLayoutManager(this));
-        // rvNetworks.setAdapter(networkAdapter); // LINHA ANTIGA
-        rvNetworks.setAdapter(ssidGroupAdapter); // NOVA LINHA
+        rvNetworks.setAdapter(ssidGroupAdapter);
     }
 
     private void checkPermissionsAndScan() {
@@ -133,8 +131,7 @@ public class MetricsActivity extends AppCompatActivity {
 
         btnScan.setEnabled(false);
         btnScan.setText("Verificando...");
-        // networkAdapter.setNetworkList(new ArrayList<>()); // LINHA ANTIGA
-        ssidGroupAdapter.setSsidGroups(new ArrayList<>()); // NOVA LINHA
+        ssidGroupAdapter.setSsidGroups(new ArrayList<>());
     }
 
     private void scanAndDisplay() {
@@ -146,17 +143,14 @@ public class MetricsActivity extends AppCompatActivity {
 
             // Atualiza a UI
             runOnUiThread(() -> {
-                // networkAdapter.setNetworkList(networkItems); // LINHA ANTIGA
-                ssidGroupAdapter.setSsidGroups(groupItems); // NOVA LINHA
+                ssidGroupAdapter.setSsidGroups(groupItems);
 
                 btnScan.setEnabled(true);
                 btnScan.setText("Verificar Novamente");
 
-                // if (networkItems.isEmpty()) { // LINHA ANTIGA
-                if (groupItems.isEmpty()) { // NOVA LINHA
+                if (groupItems.isEmpty()) {
                     Toast.makeText(this, "Nenhuma rede Wi-Fi encontrada.", Toast.LENGTH_SHORT).show();
                 }
-
             });
         }).start();
     }

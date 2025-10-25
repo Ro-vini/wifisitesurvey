@@ -10,7 +10,6 @@ public class SsidGroupItem implements java.io.Serializable {
     private boolean isExpanded;
 
     public SsidGroupItem(String ssidName, boolean isCurrentNetwork, List<BssidInfo> bssids) {
-        //... (o resto do código fica igual)
         this.ssidName = ssidName;
         this.isCurrentNetwork = isCurrentNetwork;
         this.bssids = bssids;

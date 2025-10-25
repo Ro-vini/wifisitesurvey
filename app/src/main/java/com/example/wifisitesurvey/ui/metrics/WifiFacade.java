@@ -27,7 +27,7 @@ public class WifiFacade {
     private List<ScanResult> scans;
     private ScanResult currentScan;
     private DhcpInfo dhcp;
-    private String mobile;
+    //private String mobile;
     private int health;
 
     public WifiFacade(Context ctx) {
@@ -45,7 +45,7 @@ public class WifiFacade {
         scans = wifiService.scanNetworks();
         currentScan = findCurrentScan(current, scans);
         dhcp = wifiService.getDhcpInfo();
-        mobile = wifiService.getMobileIpAddress();
+        //mobile = wifiService.getMobileIpAddress();
         health = healthEvaluator.evaluateNetworkHealth(current);
     }
 
@@ -65,7 +65,7 @@ public class WifiFacade {
             String ssid = (current.getSSID() == null || current.getSSID().isEmpty()) ? "<unknown ssid>" : current.getSSID().replace("\"", "");
 
             String baseDetails = formatter.formatNetworkDetails(currentScan);
-            String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp, mobile);
+            String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp/*, mobile*/);
             String details = baseDetails + "\n" + extraDetails;
 
             // Relatório de colisão
@@ -100,7 +100,6 @@ public class WifiFacade {
         return items;
     }
 
-
     /**
      * Tenta localizar no scan a entrada correspondente ao BSSID atual.
      */
@@ -131,12 +130,14 @@ public class WifiFacade {
             if (!scansBySsid.containsKey(ssid)) {
                 scansBySsid.put(ssid, new ArrayList<>());
             }
+
             scansBySsid.get(ssid).add(sr);
         }
 
         String currentSsid = (current != null && current.getSSID() != null) ?
                 current.getSSID().replace("\"", "") :
                 null;
+
         if (currentSsid != null && currentSsid.isEmpty()) {
             currentSsid = "<unknown ssid>";
         }
@@ -148,6 +149,7 @@ public class WifiFacade {
                     scansBySsid.get(currentSsid),
                     true // é a rede atual
             ));
+
             // Remover da lista para não adicionar de novo
             scansBySsid.remove(currentSsid);
         }
@@ -205,7 +207,7 @@ public class WifiFacade {
 
             // Se for a rede atual, adicionar os extras
             if (isCurrentGroup && current != null && sr.BSSID.equals(current.getBSSID())) {
-                String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp, mobile);
+                String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp/*, mobile*/);
                 details += "\n" + extraDetails;
 
                 // Adicionar colisão SOMENTE ao BSSID específico ao qual estamos conectados

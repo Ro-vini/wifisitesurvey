@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.net.wifi.WifiInfo;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,8 +17,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
+import com.example.wifisitesurvey.services.WifiService;
 import com.example.wifisitesurvey.ui.main.MainActivity;
-import com.example.wifisitesurvey.ui.survey.SurveyActivity;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
 public class BssidDetailActivity extends AppCompatActivity {
@@ -29,6 +30,7 @@ public class BssidDetailActivity extends AppCompatActivity {
     private RecyclerView rvBssids;
     private BssidDetailAdapter adapter;
     private SsidGroupItem ssidGroup;
+    private WifiService wifiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,29 +51,38 @@ public class BssidDetailActivity extends AppCompatActivity {
         tvSsidTitle = findViewById(R.id.tvSsidTitle);
         btnDeepAnalysis = findViewById(R.id.btnDeepAnalysis);
         rvBssids = findViewById(R.id.rvBssids);
+        wifiService = new WifiService(this);
 
         // Configurar Título
         // 1. Define apenas o nome do SSID como texto
         tvSsidTitle.setText(ssidGroup.getSsidName());
 
         // 2. Decide qual ícone usar (o de "check" se for a rede atual)
-                int iconResource = ssidGroup.isCurrentNetwork() ?
-                        R.drawable.ic_network_check :
-                        R.drawable.ic_wifi;
+        int iconResource = ssidGroup.isCurrentNetwork() ?
+                R.drawable.ic_network_check :
+                R.drawable.ic_wifi;
 
         // 3. Define o ícone à esquerda (DrawableStart) do TextView
-                tvSsidTitle.setCompoundDrawablesWithIntrinsicBounds(iconResource, 0, 0, 0);
+        tvSsidTitle.setCompoundDrawablesWithIntrinsicBounds(iconResource, 0, 0, 0);
 
         // Configurar RecyclerView
         setupRecyclerView();
         adapter.setBssidList(ssidGroup.getBssids());
+
+        if (ssidGroup.isCurrentNetwork()) {
+            WifiInfo currentConnection = wifiService.getCurrentConnection();
+            if (currentConnection != null && currentConnection.getBSSID() != null) {
+                adapter.setCurrentBssid(currentConnection.getBSSID());
+            }
+        }
 
         // Configurar o botão "Análise Profunda"
         setupDeepAnalysisButton();
     }
 
     private void setupRecyclerView() {
-        adapter = new BssidDetailAdapter(this);
+        // Passamos o WifiService que será usado pelos ViewHolders
+        adapter = new BssidDetailAdapter(wifiService);
         rvBssids.setLayoutManager(new LinearLayoutManager(this));
         rvBssids.setAdapter(adapter);
     }
@@ -101,10 +112,11 @@ public class BssidDetailActivity extends AppCompatActivity {
     private boolean isConnectedToWifi() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager == null) return false;
+
         Network activeNetwork = connectivityManager.getActiveNetwork();
         if (activeNetwork == null) return false;
+
         NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(activeNetwork);
-        if (capabilities == null) return false;
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        return capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
     }
 }
