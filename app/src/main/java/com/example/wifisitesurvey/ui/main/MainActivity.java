@@ -5,12 +5,15 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageButton;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import com.example.wifisitesurvey.R; // Você precisará criar os layouts para isso funcionar
+import com.example.wifisitesurvey.R;
+import com.example.wifisitesurvey.ui.glossary.GlossaryActivity;
 import com.example.wifisitesurvey.ui.survey.SurveyActivity;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -43,6 +46,12 @@ public class MainActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab_add_survey);
         fab.setOnClickListener(view -> showCreateSurveyDialog());
+
+        ImageButton btnGlossary = findViewById(R.id.btn_glossary);
+        btnGlossary.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, GlossaryActivity.class);
+            startActivity(intent);
+        });
 
         adapter.setOnItemClickListener(survey -> {
             Intent intent = new Intent(MainActivity.this, SurveyActivity.class);

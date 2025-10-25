@@ -39,13 +39,31 @@
 
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_survey"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/inferior_group_buttons"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Adicionar novo survey"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        android:orientation="vertical"
+        android:layout_gravity="bottom|start"
+        app:layout_constraintBottom_toTopOf="@id/layout_controls_scroll">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_glossary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|end"
+            android:layout_margin="16dp"
+            android:contentDescription="Glossário"
+            app:srcCompat="@drawable/ic_glossary" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_add_survey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="Adicionar novo survey"
+            app:srcCompat="@android:drawable/ic_input_add" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

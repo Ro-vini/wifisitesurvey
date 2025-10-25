@@ -8,7 +8,7 @@
     android:id="@+id/activity_bssid_root"
     android:paddingHorizontal="16dp"
     android:paddingTop="35dp"
-    tools:context=".ui.metrics.BssidDetailActivity">
+    tools:context=".ui.bssidDetail.BssidDetailActivity">
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardSsidTitle"
@@ -56,5 +56,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/cardSsidTitle"
         tools:listitem="@layout/list_item_bssid_detail" />
+
+    <LinearLayout
+        android:id="@+id/inferior_group_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_gravity="bottom|end"
+        app:layout_constraintBottom_toBottomOf="@id/rvBssids"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_glossary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="Glossário"
+            app:srcCompat="@drawable/ic_glossary" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

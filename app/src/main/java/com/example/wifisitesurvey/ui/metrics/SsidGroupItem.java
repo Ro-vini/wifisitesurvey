@@ -1,5 +1,7 @@
 package com.example.wifisitesurvey.ui.metrics;
 
+import com.example.wifisitesurvey.ui.bssidDetail.BssidInfo;
+
 import java.util.List;
 public class SsidGroupItem implements java.io.Serializable {
     private static final long serialVersionUID = 1L;

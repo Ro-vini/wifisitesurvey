@@ -9,11 +9,8 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
-
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -26,7 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
-import com.example.wifisitesurvey.ui.main.MainActivity;
+import com.example.wifisitesurvey.ui.glossary.GlossaryActivity;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
 import java.util.ArrayList;
@@ -35,6 +32,7 @@ import java.util.List;
 public class MetricsActivity extends AppCompatActivity {
 
     private Button btnScan;
+    private ImageButton btnGlossary;
     private RecyclerView rvNetworks;
     private WifiFacade wifiFacade;
     private SsidGroupAdapter ssidGroupAdapter;
@@ -51,8 +49,9 @@ public class MetricsActivity extends AppCompatActivity {
         constraintLayout = findViewById(R.id.activity_metrics_root);
         EdgeToEdgeUtils.setupEdgeToEdge(constraintLayout);
 
-        // Encontre o layout raiz (que você deu o ID no XML)
+        // Encontre os componentes do layout
         btnScan = findViewById(R.id.btnScan);
+        btnGlossary = findViewById(R.id.btn_glossary);
         rvNetworks = findViewById(R.id.rvNetworks);
 
         wifiFacade = new WifiFacade(this);
@@ -62,6 +61,10 @@ public class MetricsActivity extends AppCompatActivity {
 
         // Configurar Listeners
         btnScan.setOnClickListener(v -> checkPermissionsAndScan());
+        btnGlossary.setOnClickListener(v -> {
+            Intent intent = new Intent(MetricsActivity.this, GlossaryActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupRecyclerView() {

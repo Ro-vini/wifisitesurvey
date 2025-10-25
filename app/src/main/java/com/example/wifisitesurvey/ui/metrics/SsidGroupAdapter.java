@@ -6,13 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
+import com.example.wifisitesurvey.ui.bssidDetail.BssidDetailActivity;
 
 import java.util.ArrayList;
 import java.util.List;

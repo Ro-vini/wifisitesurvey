@@ -1,4 +1,4 @@
-package com.example.wifisitesurvey.ui.metrics;
+package com.example.wifisitesurvey.ui.bssidDetail;
 
 import android.graphics.Color;
 import android.net.wifi.WifiInfo;

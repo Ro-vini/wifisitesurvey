@@ -1,4 +1,4 @@
-package com.example.wifisitesurvey.ui.metrics;
+package com.example.wifisitesurvey.ui.bssidDetail;
 public class BssidInfo implements java.io.Serializable {
 
     // Adicione esta linha (boa prática para serialização)

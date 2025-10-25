@@ -7,6 +7,7 @@ import android.net.wifi.WifiInfo;
 
 import com.example.wifisitesurvey.services.ShellPingService;
 import com.example.wifisitesurvey.services.WifiService;
+import com.example.wifisitesurvey.ui.bssidDetail.BssidInfo;
 import com.example.wifisitesurvey.utils.WifiAnalyzer;
 
 import java.util.ArrayList;
