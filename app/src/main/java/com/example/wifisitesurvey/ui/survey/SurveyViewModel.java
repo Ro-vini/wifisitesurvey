@@ -18,7 +18,6 @@ public class SurveyViewModel extends AndroidViewModel {
     private final SurveyRepository repository;
     private final LocationProvider locationProvider;
     private final WifiService wifiService;
-
     private final MutableLiveData<Boolean> isTracking = new MutableLiveData<>(false);
     private long currentSurveyId = -1L;
 

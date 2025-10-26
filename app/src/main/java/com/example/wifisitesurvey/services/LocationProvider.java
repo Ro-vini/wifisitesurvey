@@ -22,21 +22,19 @@ import com.google.android.gms.location.Priority;
  * Gerencia o acesso à localização do dispositivo usando a FusedLocationProviderClient.
  * Esta classe abstrai a complexidade de solicitar, receber e parar atualizações de localização,
  * expondo os dados de forma reativa através de LiveData.
- * Filtra posições inconsistentes com o filtro Kalman.
  */
 public class LocationProvider {
 
     private static final String TAG = "LocationProvider";
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 1000;
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 1000;
-    private static final float MIN_ACCURACY_METERS = 32.8f; // 10 pés
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3000;
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 1500;
+    private static final float MIN_UPDATE_DISTANCE_METERS = 2f; // Distância mínima para atualização
+    private static final float MIN_ACCURACY_METERS = 20f; // Aumentei um pouco para ser mais tolerante em áreas com sinal ruim
 
     private final FusedLocationProviderClient fusedLocationClient;
     private final MutableLiveData<Location> locationLiveData = new MutableLiveData<>();
     private final LocationRequest locationRequest;
     private final LocationCallback locationCallback;
-
-    private final KalmanFilter kalmanFilter = new KalmanFilter();
 
     public LocationProvider(Context context) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context.getApplicationContext());
@@ -46,6 +44,7 @@ public class LocationProvider {
                 .setGranularity(Granularity.GRANULARITY_FINE)
                 .setWaitForAccurateLocation(true)
                 .setMinUpdateIntervalMillis(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS)
+                .setMinUpdateDistanceMeters(MIN_UPDATE_DISTANCE_METERS) // Chave para evitar "saltos"
                 .build();
 
         // Define o callback que será executado quando uma nova localização for recebida
@@ -53,17 +52,13 @@ public class LocationProvider {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-                Location raw = locationResult.getLastLocation();
-                if (raw == null || !raw.hasAccuracy() || raw.getAccuracy() > MIN_ACCURACY_METERS) {
-                    Log.w(TAG, "Location discarded (low accuracy)");
+                Location location = locationResult.getLastLocation();
+                if (location == null || !location.hasAccuracy() || location.getAccuracy() > MIN_ACCURACY_METERS) {
+                    Log.w(TAG, "Location discarded (low accuracy or not present)");
                     return;
                 }
-
-                Location filtered = kalmanFilter.update(raw);
-                if (filtered != null) {
-                    locationLiveData.postValue(filtered);
-                    Log.d(TAG, "Accepted filtered location (" + filtered.getAccuracy() + "m)");
-                }
+                locationLiveData.postValue(location);
+                Log.d(TAG, "Accepted location (" + location.getAccuracy() + "m)");
             }
         };
     }
@@ -100,45 +95,5 @@ public class LocationProvider {
     public void stopLocationUpdates() {
         Log.i(TAG, "Stopping location updates.");
         fusedLocationClient.removeLocationUpdates(locationCallback);
-    }
-
-    /**
-     * Implementação leve do filtro de Kalman para suavizar o ruído do GPS.
-     */
-    private static class KalmanFilter {
-        private static final double Q = 0.0001;  // variância do processo
-        private static final double R = 10;      // variância da medição
-
-        private boolean initialized = false;
-        private double lat, lon;
-        private double pLat = 1, pLon = 1; // covariâncias
-
-        public Location update(Location measurement) {
-            if (!initialized) {
-                lat = measurement.getLatitude();
-                lon = measurement.getLongitude();
-                initialized = true;
-                return measurement;
-            }
-
-            // Kalman 1D para latitude
-            pLat += Q;
-            double kLat = pLat / (pLat + R);
-            lat += kLat * (measurement.getLatitude() - lat);
-            pLat = (1 - kLat) * pLat;
-
-            // Kalman 1D para longitude
-            pLon += Q;
-            double kLon = pLon / (pLon + R);
-            lon += kLon * (measurement.getLongitude() - lon);
-            pLon = (1 - kLon) * pLon;
-
-            Location filtered = new Location(measurement);
-            filtered.setLatitude(lat);
-            filtered.setLongitude(lon);
-            filtered.setAccuracy((float) Math.min(measurement.getAccuracy(), 5.0f));
-
-            return filtered;
-        }
     }
 }

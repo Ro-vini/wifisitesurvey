@@ -575,7 +575,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                         pointFoundNearby = true;
                         break;
                     }
-                    if (distance < 1) { // ALTERAR AQUI TAMANHO DAS MEDIÇÕES HEATMAP (BOLOTAS)
+                    if (distance < 2) { // ALTERAR AQUI TAMANHO DAS MEDIÇÕES HEATMAP (BOLOTAS)
                         double weight = 1.0 / Math.pow(distance, power);
                         numerator += weight * dp.rssi;
                         denominator += weight;
@@ -679,7 +679,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
 
             // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DOS HEATMAP GERADO
-            blurScript.setRadius(0.2f);
+            blurScript.setRadius(1f);
 
             blurScript.setInput(inAllocation);
             blurScript.forEach(outAllocation);
