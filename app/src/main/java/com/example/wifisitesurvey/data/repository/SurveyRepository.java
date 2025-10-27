@@ -5,7 +5,9 @@ import androidx.lifecycle.LiveData;
 
 import com.example.wifisitesurvey.data.database.AppDatabase;
 import com.example.wifisitesurvey.data.database.SurveyDao;
+import com.example.wifisitesurvey.data.database.FloorplanDao;
 import com.example.wifisitesurvey.data.model.DataPoint;
+import com.example.wifisitesurvey.data.model.Floorplan;
 import com.example.wifisitesurvey.data.model.Survey;
 
 import java.util.List;
@@ -20,11 +22,13 @@ import java.util.concurrent.Future;
 public class SurveyRepository {
 
     private final SurveyDao surveyDao;
+    private final FloorplanDao floorplanDao;
     private final ExecutorService databaseExecutor;
 
     public SurveyRepository(Application application) {
         AppDatabase db = AppDatabase.getDatabase(application);
         surveyDao = db.surveyDao();
+        floorplanDao = db.floorplanDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -85,6 +89,23 @@ public class SurveyRepository {
                 // Se o ponto é novo, insere-o.
                 surveyDao.insertDataPoint(dataPoint);
             }
+        });
+    }
+
+    public LiveData<Floorplan> getFloorplanForSurvey(long surveyId) {
+        return floorplanDao.getFloorplanForSurvey(surveyId);
+    }
+
+    public void saveFloorplan(Floorplan floorplan) {
+        // Execute a inserção em uma thread de fundo para não bloquear a UI
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            floorplanDao.insertOrUpdate(floorplan);
+        });
+    }
+
+    public void clearFloorplanData(long surveyId) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            floorplanDao.deleteBySurveyId(surveyId);
         });
     }
 }

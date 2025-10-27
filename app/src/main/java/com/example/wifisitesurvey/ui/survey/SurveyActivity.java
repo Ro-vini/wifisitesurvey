@@ -2,10 +2,13 @@ package com.example.wifisitesurvey.ui.survey;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
+import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
@@ -38,6 +41,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -45,6 +50,7 @@ import android.graphics.Color;
 import com.google.maps.android.SphericalUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.provider.MediaStore;
@@ -69,8 +75,11 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     //private TileOverlay heatmapOverlay;
     private GroundOverlay heatmapOverlay;
     private GroundOverlay floorplanOverlay;
+    private Uri floorplanImageUri;
+    private List<Circle> realTimeCircles = new ArrayList<>();
     private FusedLocationProviderClient fusedLocationClient; // << ADICIONE ESTA LINHA
     private WifiService wifiService;
+    private CountDownTimer buttonCountdown;
 
     // Views do Layout
     private Button startStopButton, generateHeatmapButton, btnConfirmPoint;
@@ -115,6 +124,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
                     try {
+                        final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                        this.floorplanImageUri = uri; // Guardar a URI
+
                         floorplanBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
                         currentState = GeoreferenceState.AWAITING_FIRST_MAP_POINT;
                         updateUiForState();
@@ -169,25 +182,32 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         layoutControls = findViewById(R.id.layout_controls);
         textViewRssi = findViewById(R.id.textRssi);
         textViewSpeed = findViewById(R.id.textSpeed);
+
         // Views do Modo de Edição
         layoutEditFloorplan = findViewById(R.id.layout_edit_floorplan);
         seekbarSize = findViewById(R.id.seekbar_size);
         seekbarRotation = findViewById(R.id.seekbar_rotation);
         btnEditFloorplan = findViewById(R.id.btn_edit_floorplan);
         btnDoneEditing = findViewById(R.id.btn_done_editing);
+
+        btnEditFloorplan.setVisibility(View.GONE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // Desativa o botão logo ao entrar na tela
-        startStopButton.setEnabled(false);
+        startUnlockButtonCountdown(10000);
+    }
 
-        // Reativa após 5 segundos
-        new android.os.Handler(Looper.getMainLooper()).postDelayed(() -> {
-            startStopButton.setEnabled(true);
-        }, 5000);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Cancela o contador se o utilizador sair da atividade
+        if (buttonCountdown != null) {
+            buttonCountdown.cancel();
+            buttonCountdown = null;
+        }
     }
 
     @Override
@@ -202,6 +222,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         googleMap.setMaxZoomPreference(MAX_ZOOM_LEVEL);
 
         checkLocationPermission();
+
+        drawHeatmap();
+
+        loadSavedFloorplan();
     }
 
     @Override
@@ -217,6 +241,46 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         } else {
             requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
         }
+    }
+
+    /**
+     * Inicia uma contagem decrescente de 5 segundos no botão Iniciar/Parar,
+     * mostrando o tempo restante.
+     */
+    private void startUnlockButtonCountdown(int millisPause) {
+        // Cancela qualquer contador anterior, se estiver a decorrer
+        if (buttonCountdown != null) {
+            buttonCountdown.cancel();
+        }
+
+        startStopButton.setEnabled(false); // Desativa o botão
+
+        buttonCountdown = new CountDownTimer(millisPause, 1000) { // 5000ms total, 1000ms de intervalo
+            @SuppressLint("SetTextI18n")
+            @Override
+            public void onTick(long millisUntilFinished) {
+                if (startStopButton != null) {
+                    // Arredonda para cima para mostrar "5" em vez de "4" no início
+                    long seconds = (long) Math.round(millisUntilFinished / 1000.0);
+                    startStopButton.setText("Aguarde (" + seconds + "s)");
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (startStopButton != null) {
+                    buttonCountdown = null; // Limpa a referência
+
+                    // Restaura o texto original (Iniciar ou Parar)
+                    Boolean isTracking = viewModel.getIsTracking().getValue();
+                    startStopButton.setText((isTracking != null && isTracking) ? "Parar" : "Iniciar");
+
+                    startStopButton.setEnabled(true); // Reativa o botão
+                }
+            }
+        };
+
+        buttonCountdown.start(); // Inicia o contador
     }
 
     @SuppressLint("MissingPermission")
@@ -250,18 +314,55 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             btnEditFloorplan.setVisibility(isTracking ? View.GONE : View.VISIBLE);
             textViewRssi.setVisibility(isTracking ? View.VISIBLE : View.GONE);
             textViewSpeed.setVisibility(isTracking ? View.VISIBLE : View.GONE);
+
+            if (isTracking) {
+                // Se está fazendo tracking, esconda sempre os botões de planta
+                btnPlaceFloorplan.setVisibility(View.GONE);
+                btnEditFloorplan.setVisibility(View.GONE);
+            } else {
+                btnPlaceFloorplan.setVisibility(View.VISIBLE);
+                // Se NÃO está fazendo tracking, mostre o botão APENAS se a planta existir
+                btnEditFloorplan.setVisibility(floorplanOverlay != null ? View.VISIBLE : View.GONE);
+
+                // Se o tracking parou, limpa os círculos de tempo real
+                if (realTimeCircles != null && !realTimeCircles.isEmpty()) {
+                    for (Circle circle : realTimeCircles) {
+                        circle.remove();
+                    }
+                    realTimeCircles.clear();
+                }
+            }
         });
 
         viewModel.getLiveLocation().observe(this, location -> {
             if (viewModel.getIsTracking().getValue() != null && viewModel.getIsTracking().getValue()) {
                 viewModel.recordDataPoint(location);
 
+                int rssi = -100; // Valor padrão
                 WifiInfo wifiInfo = wifiService.getCurrentConnection();
                 if (wifiInfo != null) {
-                    int rssi = wifiInfo.getRssi();
+                    rssi = wifiInfo.getRssi();
                     int linkSpeed = wifiInfo.getLinkSpeed();
                     textViewRssi.setText(String.format("RSSI\n %d dBm", rssi));
                     textViewSpeed.setText(String.format("Speed\n %d Mbps", linkSpeed));
+                }
+
+                // Esta é a forma leve de dar feedback em tempo real.
+                // Não chame drawHeatmap() aqui!
+                if (googleMap != null) {
+                    LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
+
+                    // Reutiliza sua função de cor para o círculo
+                    int pointColor = getRssiColor(rssi);
+
+                    CircleOptions circleOptions = new CircleOptions()
+                            .center(newPoint)
+                            .radius(0.3) // Raio pequeno (ex: 30cm)
+                            .strokeWidth(0) // Sem borda
+                            .fillColor(pointColor); // Usa a cor do RSSI
+
+                    // Adiciona o círculo ao mapa e à nossa lista
+                    realTimeCircles.add(googleMap.addCircle(circleOptions));
                 }
             }
         });
@@ -273,10 +374,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 viewModel.toggleTracking();
                 startStopButton.setEnabled(false); // desativa imediatamente
 
-                // Reativa após 5 segundos
-                new android.os.Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    startStopButton.setEnabled(true);
-                }, 5000);
+                startUnlockButtonCountdown(5000);
             } else {
                 Toast.makeText(this, "Conceda a permissão de localização para iniciar.", Toast.LENGTH_SHORT).show();
                 checkLocationPermission();
@@ -286,14 +384,98 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         generateHeatmapButton.setOnClickListener(v -> drawHeatmap());
 
         btnPlaceFloorplan.setOnClickListener(v -> {
+            clearHeatmap(); // Limpa o heatmap anterior
+
             currentState = GeoreferenceState.NONE;
-            if (floorplanOverlay != null) floorplanOverlay.remove();
+            if (floorplanOverlay != null) {
+                floorplanOverlay.remove();
+                floorplanOverlay = null;
+                btnEditFloorplan.setVisibility(View.GONE);
+            }
+
+            viewModel.clearFloorplanData();
+            this.floorplanImageUri = null;
+            this.floorplanBitmap = null;
+
             selectImageLauncher.launch("image/*");
         });
 
         btnConfirmPoint.setOnClickListener(v -> handleConfirmPoint());
         btnEditFloorplan.setOnClickListener(v -> enterEditMode());
         btnDoneEditing.setOnClickListener(v -> exitEditMode());
+    }
+
+    /**
+     * Guarda o estado atual da planta (posição, tamanho, rotação e URI da imagem)
+     * através do ViewModel.
+     */
+    private void saveCurrentFloorplanState() {
+        if (floorplanOverlay == null || floorplanImageUri == null) {
+            // Não há nada para guardar
+            return;
+        }
+
+        LatLng center = floorplanOverlay.getPosition();
+        float width = floorplanOverlay.getWidth();
+        float bearing = floorplanOverlay.getBearing();
+        String uriString = floorplanImageUri.toString();
+
+        // Informa o ViewModel para guardar estes dados na base de dados
+        viewModel.saveFloorplanData(uriString, center, width, bearing);
+    }
+
+    /**
+     * Tenta carregar os dados da planta guardada (associada a este surveyId)
+     * a partir do ViewModel e recriá-la no mapa.
+     */
+    private void loadSavedFloorplan() {
+        // Observa o ViewModel. O ViewModel deve ser responsável por ir buscar
+        // os dados da planta à base de dados com base no currentSurveyId.
+        // (Terá de implementar getFloorplanForSurvey() no seu ViewModel)
+        viewModel.getFloorplanForSurvey().observe(this, floorplanData -> {
+            // Verifica se os dados existem e se o mapa está pronto
+            if (floorplanData == null || floorplanData.imageUri == null || googleMap == null) {
+                return;
+            }
+
+            try {
+                // 1. Obter a URI e re-adquirir permissão de leitura
+                Uri uri = Uri.parse(floorplanData.imageUri);
+                final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+                getContentResolver().takePersistableUriPermission(uri, takeFlags);
+
+                // 2. Carregar o Bitmap
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+
+                // 3. Recriar as opções do GroundOverlay
+                GroundOverlayOptions options = new GroundOverlayOptions()
+                        .image(BitmapDescriptorFactory.fromBitmap(bitmap))
+                        .position(new LatLng(floorplanData.latitude, floorplanData.longitude), floorplanData.width)
+                        .bearing(floorplanData.bearing)
+                        .transparency(0.4f);
+
+                // 4. Adicionar ao mapa e guardar referências locais
+                floorplanOverlay = googleMap.addGroundOverlay(options);
+                floorplanImageUri = uri;
+                floorplanBitmap = bitmap;
+
+                // 5. Atualizar a UI
+                // Verifica se não estamos a fazer tracking antes de mostrar o botão
+                Boolean isTracking = viewModel.getIsTracking().getValue();
+                if (isTracking == null || !isTracking) {
+                    btnEditFloorplan.setVisibility(View.VISIBLE);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Falha ao recarregar a planta guardada.", Toast.LENGTH_SHORT).show();
+                // Se falhar, limpa os dados para evitar loops
+                viewModel.clearFloorplanData();
+            }
+
+            // Remove o observer. Isto é uma operação de "load" que só acontece uma vez.
+            viewModel.getFloorplanForSurvey().removeObservers(this);
+        });
     }
 
     private void handleConfirmPoint() {
@@ -378,7 +560,15 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 .transparency(0.4f);
 
         floorplanOverlay = googleMap.addGroundOverlay(options);
-        btnEditFloorplan.setVisibility(View.VISIBLE);
+
+        Boolean isTracking = viewModel.getIsTracking().getValue();
+        if (isTracking == null || !isTracking) {
+            btnEditFloorplan.setVisibility(View.VISIBLE);
+        }
+
+        saveCurrentFloorplanState(); // Guarda o estado inicial
+        drawHeatmap(); // Gera o heatmap pela primeira vez com a planta
+        Toast.makeText(this, "Planta posicionada. Pode ajustar em 'Editar'.", Toast.LENGTH_LONG).show();
     }
 
     private void enterEditMode() {
@@ -386,7 +576,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Toast.makeText(this, "Posicione a planta primeiro.", Toast.LENGTH_SHORT).show();
             return;
         }
+
         isEditingFloorplan = true;
+
+        viewModel.clearFloorplanData();
+        clearHeatmap(); // Limpa o heatmap para ver a planta claramente
+
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(floorplanOverlay.getPosition()));
 
         layoutEditFloorplan.setVisibility(View.VISIBLE);
@@ -405,6 +600,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         layoutEditFloorplan.setVisibility(View.GONE);
         layoutControls.setVisibility(View.VISIBLE);
         crosshair.setVisibility(View.GONE);
+
+        saveCurrentFloorplanState(); // Guarda o estado final
+        drawHeatmap(); // Redesenha o heatmap com as novas dimensões/posição
+        Toast.makeText(this, "Ajustes da planta guardados.", Toast.LENGTH_SHORT).show();
     }
 
     private void setupFloorplanManipulationControls() {
@@ -427,15 +626,22 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         seekbarRotation.setOnSeekBarChangeListener(listener);
     }
 
-    // SUBSTITUA SEU drawHeatmap POR ESTE:
-    private void drawHeatmap() {
+    /**
+     * Remove a sobreposição do mapa de calor, se existir.
+     */
+    private void clearHeatmap() {
         if (heatmapOverlay != null) {
             heatmapOverlay.remove();
+            heatmapOverlay = null;
         }
+    }
+
+    private void drawHeatmap() {
+        clearHeatmap(); // Garante que qualquer heatmap antigo seja removido primeiro
 
         viewModel.getDataPointsForSurvey().observe(this, dataPoints -> {
             if (dataPoints == null || dataPoints.isEmpty()) {
-                Toast.makeText(this, "Não há dados para gerar o mapa de calor.", Toast.LENGTH_SHORT).show();
+                // Toast.makeText(this, "Não há dados para gerar o mapa de calor.", Toast.LENGTH_SHORT).show();
                 return;
             }
 

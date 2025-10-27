@@ -1,11 +1,14 @@
 package com.example.wifisitesurvey.ui.glossary;
 
 import android.os.Bundle;
+import android.view.View;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.wifisitesurvey.R;
+import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,9 @@ public class GlossaryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_glossary);
         setTitle("Glossário");
+
+        View mainLayout = findViewById(R.id.glossary_container);
+        EdgeToEdgeUtils.setupEdgeToEdge(mainLayout);
 
         RecyclerView rvGlossary = findViewById(R.id.rvGlossary);
         rvGlossary.setLayoutManager(new LinearLayoutManager(this));

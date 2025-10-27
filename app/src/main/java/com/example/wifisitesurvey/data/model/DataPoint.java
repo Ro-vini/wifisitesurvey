@@ -19,17 +19,12 @@ import androidx.room.PrimaryKey;
                 onDelete = ForeignKey.CASCADE),
         // Cria um índice na coluna surveyId para otimizar as consultas que filtram por survey.
         indices = {@Index(value = "surveyId")})
-public class DataPoint {
 
+public class DataPoint {
     @PrimaryKey(autoGenerate = true)
     public int id;
-
     public long surveyId;
-
     public double latitude;
-
     public double longitude;
-
     public int rssi; // Received Signal Strength Indicator
-
 }
