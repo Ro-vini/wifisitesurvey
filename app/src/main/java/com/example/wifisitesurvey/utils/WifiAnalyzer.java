@@ -16,11 +16,17 @@ public class WifiAnalyzer {
         return 0;
     }
 
+    /**
+     * Classifica a força do sinal em categorias mais granulares, alinhadas com as cores do heatmap.
+     * @param rssi O valor do RSSI em dBm.
+     * @return Uma string descrevendo a categoria do sinal.
+     */
     public String classifySignal(int rssi) {
-        if (rssi <= -90) return "Muito fraco";
-        if (rssi <= -80) return "Fraco";
-        if (rssi <= -67) return "Bom";
-        return "Excelente";
+        if (rssi >= -55) return "Excelente"; // Verde ao Amarelo
+        if (rssi >= -70) return "Bom";       // Laranja
+        if (rssi >= -80) return "Fraco";     // Vermelho
+        if (rssi > -90) return "Muito Fraco"; // Vermelho escuro desbotando
+        return "Sem Sinal";
     }
 
     public String mapWifiStandard(ScanResult sr) {

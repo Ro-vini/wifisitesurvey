@@ -106,7 +106,8 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
         private final TextView tvBssidHeader, tvBssidDetails, tvBssidCollision;
         private final ImageView ivBssidExpandArrow;
         private final LinearLayout llBssidDetailsContent;
-        private final LineChart liveChart;
+        private final LineChart liveRssiChart;
+        private final LineChart liveSpeedChart;
 
         // Controle da Análise
         private final WifiService wifiService;
@@ -125,7 +126,8 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
 
             ivBssidExpandArrow = itemView.findViewById(R.id.ivBssidExpandArrow);
             llBssidDetailsContent = itemView.findViewById(R.id.llBssidDetailsContent);
-            liveChart = itemView.findViewById(R.id.liveAnalysisChart);
+            liveRssiChart = itemView.findViewById(R.id.liveRssiChart);
+            liveSpeedChart = itemView.findViewById(R.id.liveSpeedChart);
         }
 
         void bind(BssidInfo bssidInfo, boolean isConnected, boolean isExpanded) {
@@ -157,8 +159,10 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
 
         void startLiveAnalysis() {
             isAnalyzing = true;
-            liveChart.setVisibility(View.VISIBLE);
-            setupChart();
+            liveRssiChart.setVisibility(View.VISIBLE);
+            liveSpeedChart.setVisibility(View.VISIBLE);
+            setupChart(liveRssiChart);
+            setupChart(liveSpeedChart);
             analysisStartTime = System.currentTimeMillis();
             analysisHandler.post(analysisRunnable);
             Toast.makeText(itemView.getContext(), "Iniciando análise...", Toast.LENGTH_SHORT).show();
@@ -167,7 +171,8 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
         void stopLiveAnalysis() {
             if (!isAnalyzing) return;
             isAnalyzing = false;
-            liveChart.setVisibility(View.GONE);
+            liveRssiChart.setVisibility(View.GONE);
+            liveSpeedChart.setVisibility(View.GONE);
             analysisHandler.removeCallbacks(analysisRunnable);
         }
 
@@ -188,16 +193,16 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
             }
         };
 
-        private void setupChart() {
+        private void setupChart(LineChart chart) {
             // --- Início da Modificação: Cores Reativas e Scroll ---
-            liveChart.getDescription().setEnabled(false);
-            liveChart.setDrawGridBackground(false);
+            chart.getDescription().setEnabled(false);
+            chart.setDrawGridBackground(false);
 
             // Habilita o toque e o arrastar, essenciais para o scroll horizontal
-            liveChart.setTouchEnabled(true);
-            liveChart.setDragEnabled(true);
-            liveChart.setScaleEnabled(true); // Permite zoom
-            liveChart.setPinchZoom(true);
+            chart.setTouchEnabled(true);
+            chart.setDragEnabled(true);
+            chart.setScaleEnabled(true); // Permite zoom
+            chart.setPinchZoom(true);
 
             // Obter a cor do texto principal do tema atual (funciona para light/dark)
             int textColor = MaterialColors.getColor(
@@ -207,54 +212,59 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
             );
 
             // Configurar Eixo X (inferior)
-            XAxis xAxis = liveChart.getXAxis();
+            XAxis xAxis = chart.getXAxis();
             xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
             xAxis.setTextColor(textColor);
             xAxis.setDrawGridLines(false);
 
             // Configurar Eixo Y (esquerdo)
-            YAxis leftAxis = liveChart.getAxisLeft();
+            YAxis leftAxis = chart.getAxisLeft();
             leftAxis.setTextColor(textColor);
             leftAxis.setDrawGridLines(true); // Mantém as linhas de grade para referência
 
             // Desabilitar Eixo Y (direito)
-            liveChart.getAxisRight().setEnabled(false);
+            chart.getAxisRight().setEnabled(false);
 
             // Configurar Legenda
-            liveChart.getLegend().setTextColor(textColor);
+            chart.getLegend().setTextColor(textColor);
 
             // Limpar dados antigos e preparar o gráfico
-            liveChart.setData(new LineData());
+            chart.setData(new LineData());
             // --- Fim da Modificação ---
         }
 
         private void addChartEntry(int rssi, int linkSpeed) {
-            LineData data = liveChart.getData();
-            if (data == null) return;
-
-            ILineDataSet rssiSet = data.getDataSetByIndex(0);
-            if (rssiSet == null) {
-                rssiSet = createDataSet("RSSI (dBm)", Color.CYAN);
-                data.addDataSet(rssiSet);
-            }
-
-            ILineDataSet speedSet = data.getDataSetByIndex(1);
-            if (speedSet == null) {
-                speedSet = createDataSet("Velocidade (Mbps)", Color.GREEN);
-                data.addDataSet(speedSet);
-            }
-
             float timeInSeconds = (System.currentTimeMillis() - analysisStartTime) / 1000f;
-            data.addEntry(new Entry(timeInSeconds, rssi), 0);
-            data.addEntry(new Entry(timeInSeconds, linkSpeed), 1);
 
-            data.notifyDataChanged();
-            liveChart.notifyDataSetChanged();
+            // --- Update RSSI Chart ---
+            LineData rssiData = liveRssiChart.getData();
+            if (rssiData != null) {
+                ILineDataSet rssiSet = rssiData.getDataSetByIndex(0);
+                if (rssiSet == null) {
+                    rssiSet = createDataSet("RSSI (dBm)", Color.CYAN);
+                    rssiData.addDataSet(rssiSet);
+                }
+                rssiData.addEntry(new Entry(timeInSeconds, rssi), 0);
+                rssiData.notifyDataChanged();
+                liveRssiChart.notifyDataSetChanged();
+                liveRssiChart.setVisibleXRangeMaximum(15);
+                liveRssiChart.moveViewToX(rssiData.getEntryCount());
+            }
 
-            // Limita a janela visível a 15 segundos, o que força o scroll horizontal
-            liveChart.setVisibleXRangeMaximum(15);
-            // Move a visão para a última entrada, fazendo o gráfico "rolar" automaticamente
-            liveChart.moveViewToX(data.getEntryCount());
+            // --- Update Speed Chart ---
+            LineData speedData = liveSpeedChart.getData();
+            if (speedData != null) {
+                ILineDataSet speedSet = speedData.getDataSetByIndex(0);
+                if (speedSet == null) {
+                    speedSet = createDataSet("Velocidade (Mbps)", Color.GREEN);
+                    speedData.addDataSet(speedSet);
+                }
+                speedData.addEntry(new Entry(timeInSeconds, linkSpeed), 0);
+                speedData.notifyDataChanged();
+                liveSpeedChart.notifyDataSetChanged();
+                liveSpeedChart.setVisibleXRangeMaximum(15);
+                liveSpeedChart.moveViewToX(speedData.getEntryCount());
+            }
         }
 
         private LineDataSet createDataSet(String label, int color) {

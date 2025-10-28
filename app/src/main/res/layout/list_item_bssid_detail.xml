@@ -80,11 +80,33 @@
                 android:visibility="gone"
                 tools:text="Análise de Colisão..." />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="RSSI (dBm)"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium" />
+
             <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/liveAnalysisChart"
+                android:id="@+id/liveRssiChart"
                 android:layout_width="match_parent"
                 android:layout_height="200dp"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="Velocidade (Mbps)"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium" />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/liveSpeedChart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
                 android:visibility="gone"
                 tools:visibility="visible" />
 

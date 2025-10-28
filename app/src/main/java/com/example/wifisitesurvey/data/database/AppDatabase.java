@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
  * Esta classe é um singleton para prevenir que múltiplas instâncias do banco
  * sejam abertas ao mesmo tempo.
  */
-@Database(entities = {Survey.class, DataPoint.class, Floorplan.class}, version = 2, exportSchema = false)
+@Database(entities = {Survey.class, DataPoint.class, Floorplan.class}, version = 3, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
     public abstract SurveyDao surveyDao();
     public abstract FloorplanDao floorplanDao();

@@ -59,6 +59,10 @@ public class SurveyRepository {
         return surveyDao.getAllSurveys();
     }
 
+    public LiveData<List<Survey>> getSurveysBySsid(String ssid) {
+        return surveyDao.getSurveysBySsid(ssid);
+    }
+
     /**
      * Retorna um LiveData com a lista de DataPoints para um survey específico.
      * @param surveyId O ID do survey.
@@ -90,6 +94,14 @@ public class SurveyRepository {
                 surveyDao.insertDataPoint(dataPoint);
             }
         });
+    }
+
+    public void updateSurvey(Survey survey) {
+        databaseExecutor.execute(() -> surveyDao.updateSurvey(survey));
+    }
+
+    public void deleteSurvey(Survey survey) {
+        databaseExecutor.execute(() -> surveyDao.deleteSurvey(survey));
     }
 
     public LiveData<Floorplan> getFloorplanForSurvey(long surveyId) {

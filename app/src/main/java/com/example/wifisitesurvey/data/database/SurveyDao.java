@@ -2,6 +2,7 @@ package com.example.wifisitesurvey.data.database;
 
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
+import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
@@ -24,7 +25,7 @@ public interface SurveyDao {
      * @param survey O objeto Survey a ser inserido.
      * @return O ID (long) do novo survey inserido.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     long insertSurvey(Survey survey);
 
     /**
@@ -42,6 +43,20 @@ public interface SurveyDao {
     void updateDataPoint(DataPoint dataPoint);
 
     /**
+     * Atualiza um Survey existente no banco de dados.
+     * @param survey O survey a ser atualizado.
+     */
+    @Update
+    void updateSurvey(Survey survey);
+
+    /**
+     * Deleta um Survey existente no banco de dados.
+     * @param survey O survey a ser deletado.
+     */
+    @Delete
+    void deleteSurvey(Survey survey);
+
+    /**
      * Retorna um LiveData contendo a lista de todos os surveys salvos,
      * ordenados do mais recente para o mais antigo.
      * O LiveData notificará automaticamente a UI sobre quaisquer mudanças.
@@ -49,6 +64,14 @@ public interface SurveyDao {
      */
     @Query("SELECT * FROM surveys ORDER BY creationTimestamp DESC")
     LiveData<List<Survey>> getAllSurveys();
+
+    /**
+     * Retorna um LiveData contendo a lista de surveys para um SSID específico.
+     * @param ssid O SSID para filtrar os surveys.
+     * @return LiveData com a lista de surveys filtrada.
+     */
+    @Query("SELECT * FROM surveys WHERE ssid = :ssid ORDER BY creationTimestamp DESC")
+    LiveData<List<Survey>> getSurveysBySsid(String ssid);
 
     /**
      * Retorna um LiveData contendo a lista de todos os DataPoints associados

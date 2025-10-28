@@ -1,5 +1,7 @@
 package com.example.wifisitesurvey.ui.glossary;
 
+import android.os.Build;
+import android.text.Html;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -77,7 +79,13 @@ public class GlossaryAdapter extends RecyclerView.Adapter<GlossaryAdapter.Glossa
 
         void bind(GlossaryItem item, boolean isExpanded) {
             tvTerm.setText(item.getTerm());
-            tvDefinition.setText(item.getDefinition());
+
+            // Processar HTML para formatar o texto
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tvDefinition.setText(Html.fromHtml(item.getDefinition(), Html.FROM_HTML_MODE_COMPACT));
+            } else {
+                tvDefinition.setText(Html.fromHtml(item.getDefinition()));
+            }
 
             llDefinitionContent.setVisibility(isExpanded ? View.VISIBLE : View.GONE);
             ivExpandArrow.setRotation(isExpanded ? 180 : 0);
