@@ -885,7 +885,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
 
             // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DOS HEATMAP GERADO
-            blurScript.setRadius(1f);
+            blurScript.setRadius(10f);
 
             blurScript.setInput(inAllocation);
             blurScript.forEach(outAllocation);
