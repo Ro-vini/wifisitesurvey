@@ -120,10 +120,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 }
             });
 
-    private final ActivityResultLauncher<String> selectImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    // CORRIGIDO: Usando OpenDocument para obter permissões persistentes
+    private final ActivityResultLauncher<String[]> selectImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
                     try {
+                        // A permissão persistente é concedida pelo próprio contrato OpenDocument
                         final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
                         getContentResolver().takePersistableUriPermission(uri, takeFlags);
                         this.floorplanImageUri = uri; // Guardar a URI
@@ -134,6 +136,9 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                     } catch (IOException e) {
                         e.printStackTrace();
                         Toast.makeText(this, "Não foi possível carregar a imagem.", Toast.LENGTH_SHORT).show();
+                    } catch (SecurityException e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Erro de permissão ao acessar a imagem.", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -397,7 +402,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             this.floorplanImageUri = null;
             this.floorplanBitmap = null;
 
-            selectImageLauncher.launch("image/*");
+            selectImageLauncher.launch(new String[]{"image/*"});
         });
 
         btnConfirmPoint.setOnClickListener(v -> handleConfirmPoint());
@@ -885,7 +890,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
 
             // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DOS HEATMAP GERADO
-            blurScript.setRadius(10f);
+            blurScript.setRadius(15f);
 
             blurScript.setInput(inAllocation);
             blurScript.forEach(outAllocation);
