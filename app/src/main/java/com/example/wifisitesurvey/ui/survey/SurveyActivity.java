@@ -387,18 +387,24 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         generateHeatmapButton.setOnClickListener(v -> drawHeatmap());
 
         btnPlaceFloorplan.setOnClickListener(v -> {
+            viewModel.getFloorplanForSurvey().removeObservers(this);
             clearHeatmap(); // Limpa o heatmap anterior
 
-            currentState = GeoreferenceState.NONE;
             if (floorplanOverlay != null) {
                 floorplanOverlay.remove();
                 floorplanOverlay = null;
-                btnEditFloorplan.setVisibility(View.GONE);
+            }
+
+            if (floorplanBitmap != null && !floorplanBitmap.isRecycled()) {
+                floorplanBitmap.recycle();
+                floorplanBitmap = null;
             }
 
             viewModel.clearFloorplanData();
             this.floorplanImageUri = null;
-            this.floorplanBitmap = null;
+
+            currentState = GeoreferenceState.NONE;
+            btnEditFloorplan.setVisibility(View.GONE);
 
             selectImageLauncher.launch(new String[]{"image/*"});
         });
@@ -432,10 +438,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
      * a partir do ViewModel e recriá-la no mapa.
      */
     private void loadSavedFloorplan() {
-        // Observa o ViewModel. O ViewModel deve ser responsável por ir buscar
-        // os dados da planta à base de dados com base no currentSurveyId.
-        // (Terá de implementar getFloorplanForSurvey() no seu ViewModel)
         viewModel.getFloorplanForSurvey().observe(this, floorplanData -> {
+            if (floorplanOverlay != null || currentState != GeoreferenceState.NONE) {
+                viewModel.getFloorplanForSurvey().removeObservers(this);
+                return;
+            }
+
             // Verifica se os dados existem e se o mapa está pronto
             if (floorplanData == null || floorplanData.imageUri == null || googleMap == null) {
                 return;
@@ -582,7 +590,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
 
         isEditingFloorplan = true;
 
-        viewModel.clearFloorplanData();
+        // FIX: Do not clear floorplan data when entering edit mode
+        // viewModel.clearFloorplanData();
         clearHeatmap(); // Limpa o heatmap para ver a planta claramente
 
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(floorplanOverlay.getPosition()));
