@@ -120,8 +120,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 }
             });
 
-    private final ActivityResultLauncher<String> selectImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private final ActivityResultLauncher<String[]> selectImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
                     try {
                         final int takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
@@ -134,6 +134,9 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                     } catch (IOException e) {
                         e.printStackTrace();
                         Toast.makeText(this, "Não foi possível carregar a imagem.", Toast.LENGTH_SHORT).show();
+                    } catch (SecurityException e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Erro de permissão ao acessar a imagem.", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -397,7 +400,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             this.floorplanImageUri = null;
             this.floorplanBitmap = null;
 
-            selectImageLauncher.launch("image/*");
+            selectImageLauncher.launch(new String[]{"image/*"});
         });
 
         btnConfirmPoint.setOnClickListener(v -> handleConfirmPoint());
@@ -648,30 +651,32 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             Toast.makeText(this, "Gerando heatmap... Isso pode levar um momento.", Toast.LENGTH_SHORT).show();
 
             // 1. Definir os limites (com ou sem planta)
-            final LatLngBounds bounds;
-            final float width, height, bearing;
+            // A área do heatmap (bounds) é sempre calculada a partir dos pontos de dados
+            // para garantir que todos os dados sejam incluídos.
+            final LatLngBounds bounds = getBoundsFromData(dataPoints);
+            final float bearing;
 
             if (floorplanOverlay != null) {
+                // Se houver uma planta, o heatmap usará a mesma rotação da planta.
                 try {
-                    bounds = floorplanOverlay.getBounds();
-                    width = floorplanOverlay.getWidth();
-                    height = floorplanOverlay.getHeight();
                     bearing = floorplanOverlay.getBearing();
                 } catch (Exception e) {
                     Toast.makeText(SurveyActivity.this, "Erro ao ler dados da planta.", Toast.LENGTH_SHORT).show();
                     return;
                 }
             } else {
-                bounds = getBoundsFromData(dataPoints);
-                LatLng center = bounds.getCenter();
-                width = (float) SphericalUtil.computeDistanceBetween(
-                        new LatLng(center.latitude, bounds.southwest.longitude),
-                        new LatLng(center.latitude, bounds.northeast.longitude));
-                height = (float) SphericalUtil.computeDistanceBetween(
-                        new LatLng(bounds.southwest.latitude, center.longitude),
-                        new LatLng(bounds.northeast.latitude, center.longitude));
+                // Se não houver planta, não há rotação.
                 bearing = 0f;
             }
+
+            // A largura e a altura para o cálculo da resolução são baseadas nos limites dos dados.
+            LatLng center = bounds.getCenter();
+            final float width = (float) SphericalUtil.computeDistanceBetween(
+                    new LatLng(center.latitude, bounds.southwest.longitude),
+                    new LatLng(center.latitude, bounds.northeast.longitude));
+            final float height = (float) SphericalUtil.computeDistanceBetween(
+                    new LatLng(bounds.southwest.latitude, center.longitude),
+                    new LatLng(bounds.northeast.latitude, center.longitude));
 
             // 2. Roda a interpolação e o blur em uma nova thread
             new Thread(() -> {
