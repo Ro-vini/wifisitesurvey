@@ -21,7 +21,6 @@ import java.util.List;
  * Encapsula a lógica para obter informações da rede Wi-Fi, como a intensidade do sinal (RSSI).
  */
 public class WifiService {
-
     private static final String TAG = "WifiService";
     private final WifiManager wifiManager;
     private final Context context;
@@ -73,6 +72,7 @@ public class WifiService {
         return wifiManager.getDhcpInfo();
     }
 
+    // Sem uso no momento
     public String getMobileIpAddress() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null)

@@ -1,14 +1,12 @@
 package com.example.wifisitesurvey.ui.bssidDetail;
 public class BssidInfo implements java.io.Serializable {
-
-    // Adicione esta linha (boa prática para serialização)
-    private static final long serialVersionUID = 1L;
-
     private final String bssid;
     private final String details;
     private final String collisionReport;
-
     private boolean isExpanded;
+
+    private static final long serialVersionUID = 1L;
+
     public BssidInfo(String bssid, String details, String collisionReport) {
         this.bssid = bssid;
         this.details = details;

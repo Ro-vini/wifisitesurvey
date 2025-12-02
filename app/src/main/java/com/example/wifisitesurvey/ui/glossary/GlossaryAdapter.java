@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GlossaryAdapter extends RecyclerView.Adapter<GlossaryAdapter.GlossaryViewHolder> {
-
     private final List<GlossaryItem> glossaryItems = new ArrayList<>();
     private int expandedPosition = -1;
 

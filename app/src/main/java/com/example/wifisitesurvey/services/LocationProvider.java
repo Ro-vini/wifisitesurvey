@@ -24,17 +24,16 @@ import com.google.android.gms.location.Priority;
  * expondo os dados de forma reativa através de LiveData.
  */
 public class LocationProvider {
+    private final FusedLocationProviderClient fusedLocationClient;
+    private final MutableLiveData<Location> locationLiveData = new MutableLiveData<>();
+    private final LocationRequest locationRequest;
+    private final LocationCallback locationCallback;
 
     private static final String TAG = "LocationProvider";
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 1500;
     private static final float MIN_UPDATE_DISTANCE_METERS = 2f; // 0,7m - Distância mínima para atualização
     private static final float MIN_ACCURACY_METERS = 20f; // 7m
-
-    private final FusedLocationProviderClient fusedLocationClient;
-    private final MutableLiveData<Location> locationLiveData = new MutableLiveData<>();
-    private final LocationRequest locationRequest;
-    private final LocationCallback locationCallback;
 
     public LocationProvider(Context context) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context.getApplicationContext());

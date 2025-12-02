@@ -7,13 +7,9 @@ import java.util.List;
 
 public class WifiAnalyzer {
     public int calculateSignalQuality(int rssi) {
-        if (rssi >= -50) return 100;
-        if (rssi >= -60) return 80;
-        if (rssi >= -70) return 60;
-        if (rssi >= -80) return 40;
-        if (rssi >= -90) return 20;
-
-        return 0;
+        int quality = (rssi + 100) * 2;
+        // Garante que o resultado fique entre 0 e 100 (clamp)
+        return Math.min(Math.max(quality, 0), 100);
     }
 
     /**
@@ -22,11 +18,26 @@ public class WifiAnalyzer {
      * @return Uma string descrevendo a categoria do sinal.
      */
     public String classifySignal(int rssi) {
-        if (rssi >= -55) return "Excelente"; // Verde ao Amarelo
-        if (rssi >= -70) return "Bom";       // Laranja
-        if (rssi >= -80) return "Fraco";     // Vermelho
-        if (rssi > -90) return "Muito Fraco"; // Vermelho escuro desbotando
-        return "Sem Sinal";
+        // Usa a fórmula do Windows: (rssi + 100) * 2
+        int percentage = calculateSignalQuality(rssi);
+
+        // Mapeamento:
+        // 80% = -60 dBm
+        // 60% = -70 dBm
+        // 40% = -80 dBm
+        // 20% = -90 dBm
+
+        if (percentage >= 80) {
+            return "Excelente";
+        } else if (percentage >= 60) {
+            return "Bom";
+        } else if (percentage >= 40) {
+            return "Razoável";
+        } else if (percentage > 0) { // Ajuste: entre 1% e 39% (-99 a -80 dBm)
+            return "Fraco";
+        } else {
+            return "Sem Sinal";
+        }
     }
 
     public String mapWifiStandard(ScanResult sr) {

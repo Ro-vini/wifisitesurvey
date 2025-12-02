@@ -42,11 +42,11 @@ public class WifiReportFormatter {
     /**
      * Formata os detalhes ADICIONAIS que só existem para a rede ATUAL.
      */
-    public String formatCurrentNetworkExtras(WifiInfo info, int health, DhcpInfo dhcp/*, String mobileIpAddress*/) {
+    public String formatCurrentNetworkExtras(WifiInfo info, DhcpInfo dhcp) {
         if (info == null) return "";
 
         StringBuilder sb = new StringBuilder();
-        sb.append("\nSaúde da rede: ").append(health).append("%");
+        //sb.append("\nSaúde da rede: ").append(health).append("%");
         sb.append("\nVelocidade: ").append(info.getLinkSpeed()).append(" Mbps");
 
         String wifiIp = "N/A";
@@ -57,7 +57,6 @@ public class WifiReportFormatter {
         }
 
         sb.append("\nIP (Wi-Fi): ").append(wifiIp);
-        //sb.append("\nIP (Dados Móveis): ").append(mobileIpAddress);
 
         String pingTarget = "8.8.8.8";
         String pingResult = new ShellPingService().pingHost(pingTarget);

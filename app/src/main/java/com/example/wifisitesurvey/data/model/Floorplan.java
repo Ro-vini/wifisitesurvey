@@ -18,7 +18,6 @@ public class Floorplan {
 
     // ID do Survey ao qual esta planta pertence
     public long surveyId;
-
     public String imageUri;
     public double latitude;
     public double longitude;

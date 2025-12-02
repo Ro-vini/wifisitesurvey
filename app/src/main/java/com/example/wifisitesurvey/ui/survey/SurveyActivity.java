@@ -58,7 +58,6 @@ import android.provider.MediaStore;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
-// Adicione esta importação no topo (necessária para os novos métodos)
 import com.google.android.gms.maps.model.LatLngBounds;
 
 import android.renderscript.Allocation;
@@ -68,16 +67,14 @@ import android.renderscript.ScriptIntrinsicBlur;
 import android.content.Context;
 
 public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnCameraMoveListener {
-
     // Views e Componentes Principais
     private GoogleMap googleMap;
     private SurveyViewModel viewModel;
-    //private TileOverlay heatmapOverlay;
     private GroundOverlay heatmapOverlay;
     private GroundOverlay floorplanOverlay;
     private Uri floorplanImageUri;
     private List<Circle> realTimeCircles = new ArrayList<>();
-    private FusedLocationProviderClient fusedLocationClient; // << ADICIONE ESTA LINHA
+    private FusedLocationProviderClient fusedLocationClient;
     private WifiService wifiService;
     private CountDownTimer buttonCountdown;
 
@@ -102,12 +99,12 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         AWAITING_SECOND_MAP_POINT, AWAITING_SECOND_IMAGE_POINT,
         COMPLETE
     }
+
     private GeoreferenceState currentState = GeoreferenceState.NONE;
     private Bitmap floorplanBitmap;
     private LatLng firstMapPoint, secondMapPoint;
     private PointF firstImagePoint, secondImagePoint;
 
-    // --- Constantes ---
     private static final float MAX_ZOOM_LEVEL = 21.0f; // Nível de zoom máximo (ruas=15, prédios=20, satélite=21/22)
 
     // Launchers de Atividade
@@ -199,7 +196,6 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     @Override
     protected void onResume() {
         super.onResume();
-
         startUnlockButtonCountdown(10000);
     }
 
@@ -225,9 +221,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         googleMap.setMaxZoomPreference(MAX_ZOOM_LEVEL);
 
         checkLocationPermission();
-
         drawHeatmap();
-
         loadSavedFloorplan();
     }
 
@@ -522,8 +516,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 calculateAndPlaceOverlay();
                 currentState = GeoreferenceState.COMPLETE;
             }
+
             dialog.dismiss();
             updateUiForState();
+
             return true;
         });
 
@@ -537,7 +533,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             layoutControls.setVisibility(View.VISIBLE);
 
             if (currentState == GeoreferenceState.AWAITING_FIRST_MAP_POINT ||
-                    currentState == GeoreferenceState.AWAITING_SECOND_MAP_POINT) {
+                    currentState == GeoreferenceState.AWAITING_SECOND_MAP_POINT)
+            {
                 crosshair.setVisibility(View.VISIBLE);
                 btnConfirmPoint.setVisibility(View.VISIBLE);
                 layoutControls.setVisibility(View.GONE);
@@ -589,16 +586,13 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         }
 
         isEditingFloorplan = true;
-
-        // FIX: Do not clear floorplan data when entering edit mode
-        // viewModel.clearFloorplanData();
         clearHeatmap(); // Limpa o heatmap para ver a planta claramente
 
         googleMap.animateCamera(CameraUpdateFactory.newLatLng(floorplanOverlay.getPosition()));
 
         layoutEditFloorplan.setVisibility(View.VISIBLE);
         layoutControls.setVisibility(View.GONE);
-        crosshair.setVisibility(View.VISIBLE); // A mira agora serve para arrastar
+        crosshair.setVisibility(View.VISIBLE); // A mira serve para arrastar
 
         initialOverlayWidth = floorplanOverlay.getWidth();
         seekbarSize.setProgress(100);
@@ -634,6 +628,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             @Override public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         };
+
         seekbarSize.setOnSeekBarChangeListener(listener);
         seekbarRotation.setOnSeekBarChangeListener(listener);
     }
@@ -652,8 +647,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         clearHeatmap(); // Garante que qualquer heatmap antigo seja removido primeiro
 
         viewModel.getDataPointsForSurvey().observe(this, dataPoints -> {
+            // Não há dados para gerar o mapa de calor
             if (dataPoints == null || dataPoints.isEmpty()) {
-                // Toast.makeText(this, "Não há dados para gerar o mapa de calor.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -708,7 +703,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                     if (resolutionY < 2) resolutionY = 2;
 
                     // 3. Interpola os dados (Método B)
-                    final double[][] interpolatedGrid = interpolateIdw(dataPoints, bounds, resolutionX, resolutionY);
+                    final double[][] interpolatedGrid = interpolateKde(dataPoints, bounds, resolutionX, resolutionY);
 
                     // 4. Cria o bitmap "pixelado" (Método B)
                     final Bitmap heatmapBitmap = createHeatmapBitmap(interpolatedGrid);
@@ -740,10 +735,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 
 
-// --- COLE TODOS OS 5 MÉTODOS ABAIXO NO SEU ARQUIVO ---
-
     /**
-     * MÉTODO FALTANDO 1:
      * Calcula o LatLngBounds (a caixa delimitadora) que contém todos os pontos de dados coletados.
      * Adiciona um pequeno "padding" para garantir que o heatmap não seja cortado nas bordas.
      */
@@ -754,9 +746,8 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         }
         LatLngBounds bounds = builder.build();
 
-        // --- CORREÇÃO PRINCIPAL AQUI ---
-        // Nosso raio de influência no IDW é de 50 metros.
-        // Vamos adicionar um padding de 60 metros (aprox 0.00055 graus)
+        // O raio de influência no KDE é de 50 metros.
+        // Adicionar padding de 60 metros (aprox 0.00055 graus)
         // para garantir que a "caixa" tenha uma borda transparente.
         double padding = 0.00055;
 
@@ -764,12 +755,10 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                 .including(new LatLng(bounds.southwest.latitude - padding, bounds.southwest.longitude - padding));
     }
 
-
     /**
-     * MÉTODO FALTANDO 2:
-     * Interpola os dados de RSSI em uma grade usando Ponderação Inversa da Distância (IDW).
+     * Interpola os dados de RSSI usando o KDE.
      */
-    private double[][] interpolateIdw(List<DataPoint> dataPoints, LatLngBounds bounds, int gridWidth, int gridHeight) {
+    private double[][] interpolateKde(List<DataPoint> dataPoints, LatLngBounds bounds, int gridWidth, int gridHeight) {
         double[][] grid = new double[gridHeight][gridWidth];
         double latStep = (bounds.northeast.latitude - bounds.southwest.latitude) / (gridHeight - 1);
         double lngStep = (bounds.northeast.longitude - bounds.southwest.longitude) / (gridWidth - 1);
@@ -795,6 +784,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
                         pointFoundNearby = true;
                         break;
                     }
+
                     if (distance < 2) { // ALTERAR AQUI TAMANHO DAS MEDIÇÕES HEATMAP (BOLOTAS)
                         double weight = 1.0 / Math.pow(distance, power);
                         numerator += weight * dp.rssi;
@@ -814,7 +804,6 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
     }
 
     /**
-     * MÉTODO FALTANDO 3:
      * Cria um Bitmap a partir da grade interpolada, pintando cada pixel com a cor correta.
      */
     private Bitmap createHeatmapBitmap(double[][] grid) {
@@ -825,7 +814,6 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                // Invertemos Y
                 int pixelIndex = (height - 1 - y) * width + x;
                 double rssi = grid[y][x];
                 pixels[pixelIndex] = getRssiColor(rssi);
@@ -835,9 +823,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         return bitmap;
     }
 
-
     /**
-     * MÉTODO FALTANDO 4:
      * Retorna a cor ARGB exata para um determinado valor de RSSI.
      */
     private int getRssiColor(double rssi) {
@@ -846,23 +832,27 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             return Color.TRANSPARENT; // 0x00000000
         }
 
-        int baseAlpha = 170; // 0xAA (Nossa opacidade padrão)
+        int baseAlpha = 170; // 0xAA (Opacidade padrão)
 
         // --- 1. ZONA DE COR SÓLIDA ---
-        // Se o sinal for -80dBm ou mais forte, retorna a cor sólida.
-        if (rssi >= -35) return Color.argb(baseAlpha, 0x00, 0xFF, 0x00); // Verde Forte
-        if (rssi >= -40) return Color.argb(baseAlpha, 0x40, 0xFF, 0x00);
-        if (rssi >= -50) return Color.argb(baseAlpha, 0x80, 0xFF, 0x00);
-        if (rssi >= -55) return Color.argb(baseAlpha, 0xFF, 0xFF, 0x00); // Amarelo
-        if (rssi >= -60) return Color.argb(baseAlpha, 0xFF, 0xBF, 0x00);
-        if (rssi >= -65) return Color.argb(baseAlpha, 0xFF, 0x80, 0x00);
-        if (rssi >= -70) return Color.argb(baseAlpha, 0xFF, 0x40, 0x00);
-        if (rssi >= -80) return Color.argb(baseAlpha, 0xFF, 0x00, 0x00); // Vermelho
+
+        // EXCELENTE (Verdes): Melhor que -60 dBm
+        if (rssi >= -50) return Color.argb(baseAlpha, 0x00, 0xFF, 0x00); // Verde Puro
+        if (rssi >= -55) return Color.argb(baseAlpha, 0x66, 0xFF, 0x00); // Verde Limão
+        if (rssi >= -60) return Color.argb(baseAlpha, 0xCC, 0xFF, 0x00); // Verde Amarelado
+
+        // BOM (Amarelos): Entre -60 e -70 dBm
+        if (rssi >= -65) return Color.argb(baseAlpha, 0xFF, 0xFF, 0x00); // Amarelo Puro
+        if (rssi >= -70) return Color.argb(baseAlpha, 0xFF, 0xCC, 0x00); // Ouro
+
+        // RAZOÁVEL (Laranjas): Entre -70 e -80 dBm
+        if (rssi >= -75) return Color.argb(baseAlpha, 0xFF, 0x80, 0x00); // Laranja
+        if (rssi >= -80) return Color.argb(baseAlpha, 0xFF, 0x40, 0x00); // Laranja Escuro
 
 
-        // --- 2. ZONA DE DESBOTAMENTO (FADE-OUT) ---
-        // Se chegamos aqui, o RSSI está abaixo de -80 dBm.
-        // Vamos desbotar do "Vermelho Escuro" para "Transparente"
+        // --- 2. ZONA CRÍTICA / FRACO (desbotamento / fade-out) ---
+        // O RSSI está abaixo de -80 dBm.
+        // Desbotar do "Vermelho Escuro" para "Transparente"
         // na faixa de -80 dBm até -90 dBm.
 
         double fadeStartRssi = -80.0;
@@ -872,7 +862,7 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
             return Color.TRANSPARENT; // Abaixo de -90, totalmente transparente
         }
 
-        // Estamos na zona de desbotamento (entre -80 e -90)
+        // Aqui é a zona de desbotamento (entre -80 e -90)
         // Mapeia o RSSI para uma porcentagem de 0.0 (em -90) a 1.0 (em -80)
         // Ex: RSSI de -85 -> ((-85) - (-90)) / ((-80) - (-90)) = 5 / 10 = 0.5 (50%)
         double percentage = (rssi - fadeEndRssi) / (fadeStartRssi - fadeEndRssi);
@@ -880,25 +870,21 @@ public class SurveyActivity extends AppCompatActivity implements OnMapReadyCallb
         // O novo alfa será uma porcentagem do nosso alfa base
         int newAlpha = (int) (baseAlpha * percentage);
 
-        // A cor será a nossa cor mais fraca (Vermelho Escuro)
+        // A cor será a mais fraca (Vermelho Escuro)
         return Color.argb(newAlpha, 0x80, 0x00, 0x00);
     }
 
-    /**
-     * MÉTODO FALTANDO 5:
-     * Aplica um efeito de "blur" (desfoque Gaussiano) em um Bitmap.
-     */
     private Bitmap blurBitmap(Context context, Bitmap inputBitmap, float radius) {
         if (inputBitmap == null) return null;
         try {
             Bitmap outputBitmap = Bitmap.createBitmap(inputBitmap);
-            RenderScript rs = RenderScript.create(context); // Erro 5 (Cannot apply) será corrigido pela importação do Context
+            RenderScript rs = RenderScript.create(context);
             ScriptIntrinsicBlur blurScript = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
 
             Allocation inAllocation = Allocation.createFromBitmap(rs, inputBitmap);
             Allocation outAllocation = Allocation.createFromBitmap(rs, outputBitmap);
 
-            // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DOS HEATMAP GERADO
+            // AJUSTAR ESSE VALOR PARA MEXER NO BLUR DO HEATMAP GERADO
             blurScript.setRadius(1f);
 
             blurScript.setInput(inAllocation);

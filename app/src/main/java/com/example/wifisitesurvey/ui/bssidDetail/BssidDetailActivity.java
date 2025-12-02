@@ -25,9 +25,6 @@ import com.example.wifisitesurvey.ui.metrics.SsidGroupItem;
 import com.example.wifisitesurvey.utils.EdgeToEdgeUtils;
 
 public class BssidDetailActivity extends AppCompatActivity {
-
-    public static final String EXTRA_SSID_GROUP = "SSID_GROUP_DATA";
-
     private TextView tvSsidTitle;
     private Button btnDeepAnalysis;
     private ImageButton btnGlossary;
@@ -35,6 +32,8 @@ public class BssidDetailActivity extends AppCompatActivity {
     private BssidDetailAdapter adapter;
     private SsidGroupItem ssidGroup;
     private WifiService wifiService;
+
+    public static final String EXTRA_SSID_GROUP = "SSID_GROUP_DATA";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

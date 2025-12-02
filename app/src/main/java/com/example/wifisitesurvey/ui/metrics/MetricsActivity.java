@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MetricsActivity extends AppCompatActivity {
-
     private Button btnScan;
     private ImageButton btnGlossary;
     private RecyclerView rvNetworks;
@@ -124,7 +123,6 @@ public class MetricsActivity extends AppCompatActivity {
             constraintSet.clear(R.id.btnScan, ConstraintSet.BOTTOM);
 
             constraintSet.connect(R.id.btnScan, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-
             constraintSet.connect(R.id.rvNetworks, ConstraintSet.TOP, R.id.btnScan, ConstraintSet.BOTTOM, 16);
 
             constraintSet.applyTo(constraintLayout);

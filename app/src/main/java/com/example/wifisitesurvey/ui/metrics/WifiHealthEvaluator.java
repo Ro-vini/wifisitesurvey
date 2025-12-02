@@ -27,7 +27,7 @@ public class WifiHealthEvaluator {
      * Avalia a saúde da rede atual em 0-100.
      * Base: qualidade do sinal (rssi), colisões de canal e ping ao gateway.
      */
-    public int evaluateNetworkHealth(WifiInfo info) {
+    /*public int evaluateNetworkHealth(WifiInfo info) {
         if (info == null) return 0;
 
         int rssiScore = analyzer.calculateSignalQuality(info.getRssi()); // 0-100
@@ -71,6 +71,7 @@ public class WifiHealthEvaluator {
         int health = rssiScore + pingScore - collisionPenalty;
         if (health > 100) health = 100;
         if (health < 0) health = 0;
+
         return health;
-    }
+    }*/
 }

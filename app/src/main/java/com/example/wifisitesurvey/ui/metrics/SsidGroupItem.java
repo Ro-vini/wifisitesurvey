@@ -4,12 +4,12 @@ import com.example.wifisitesurvey.ui.bssidDetail.BssidInfo;
 
 import java.util.List;
 public class SsidGroupItem implements java.io.Serializable {
-    private static final long serialVersionUID = 1L;
-
     private final String ssidName;
     private final boolean isCurrentNetwork;
     private final List<BssidInfo> bssids;
     private boolean isExpanded;
+
+    private static final long serialVersionUID = 1L;
 
     public SsidGroupItem(String ssidName, boolean isCurrentNetwork, List<BssidInfo> bssids) {
         this.ssidName = ssidName;

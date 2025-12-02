@@ -20,7 +20,6 @@ import java.util.concurrent.Future;
  * Fornece uma API limpa para o acesso aos dados.
  */
 public class SurveyRepository {
-
     private final SurveyDao surveyDao;
     private final FloorplanDao floorplanDao;
     private final ExecutorService databaseExecutor;

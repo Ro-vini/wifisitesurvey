@@ -19,7 +19,6 @@ import java.util.List;
 
 // Renomeado de NetworkAdapter para SsidGroupAdapter
 public class SsidGroupAdapter extends RecyclerView.Adapter<SsidGroupAdapter.SsidGroupViewHolder> {
-
     private List<SsidGroupItem> groupList = new ArrayList<>();
     private final LayoutInflater inflater;
 
@@ -55,14 +54,14 @@ public class SsidGroupAdapter extends RecyclerView.Adapter<SsidGroupAdapter.Ssid
         private final TextView tvSsid;
         private final TextView tvBssidCount;
         private final ImageView ivIcon;
-        private final ImageView ivExpandArrow;
+        //private final ImageView ivExpandArrow;
 
         public SsidGroupViewHolder(@NonNull View itemView) {
             super(itemView);
             tvSsid = itemView.findViewById(R.id.tvItemSsid);
             tvBssidCount = itemView.findViewById(R.id.tvItemBssidCount);
             ivIcon = itemView.findViewById(R.id.ivIcon);
-            ivExpandArrow = itemView.findViewById(R.id.ivExpandArrow);
+            //ivExpandArrow = itemView.findViewById(R.id.ivExpandArrow);
         }
 
         public void bind(SsidGroupItem item) {
@@ -76,11 +75,7 @@ public class SsidGroupAdapter extends RecyclerView.Adapter<SsidGroupAdapter.Ssid
                     R.drawable.ic_network_check :
                     R.drawable.ic_wifi);
 
-            // 2. Lógica de Expansão REMOVIDA
-            // A seta agora é fixa (ou pode ser removida do layout)
-            ivExpandArrow.setImageResource(R.drawable.ic_keyboard_arrow_down); // Ou mude para ic_keyboard_arrow_right
-
-            // 4. NOVA Ação de Clique: Abrir a BssidDetailActivity
+            // 2. Ação de Clique: Abrir a BssidDetailActivity
             itemView.setOnClickListener(v -> {
                 Context context = v.getContext();
                 Intent intent = new Intent(context, BssidDetailActivity.class);

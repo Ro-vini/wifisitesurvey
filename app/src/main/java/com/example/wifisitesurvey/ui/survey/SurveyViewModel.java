@@ -34,7 +34,6 @@ public class SurveyViewModel extends AndroidViewModel {
     }
 
     // GETTERS PARA A UI OBSERVAR
-
     public LiveData<Location> getLiveLocation() {
         return locationProvider.getLiveLocation();
     }
@@ -53,7 +52,6 @@ public class SurveyViewModel extends AndroidViewModel {
     }
 
     // AÇÕES INICIADAS PELA UI
-
     public void setCurrentSurveyId(long id) {
         this.currentSurveyId.setValue(id);
     }
@@ -74,12 +72,12 @@ public class SurveyViewModel extends AndroidViewModel {
         if (location != null && surveyId != null && surveyId != -1) {
             int rssi = wifiService.getCurrentRssi();
 
-            Toast.makeText(getApplication(), "RSSI Coletado: " + rssi + " dBm", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplication(), "RSSI Coletado: " + rssi + " dBm", Toast.LENGTH_SHORT).show();
 
             DataPoint dataPoint = new DataPoint();
             dataPoint.surveyId = surveyId;
             dataPoint.latitude = location.getLatitude();
-            dataPoint.longitude = location.getLongitude(); // CORREÇÃO: data.longitude -> dataPoint.longitude
+            dataPoint.longitude = location.getLongitude();
             dataPoint.rssi = rssi;
             repository.upsertDataPoint(dataPoint);
         }
@@ -93,7 +91,6 @@ public class SurveyViewModel extends AndroidViewModel {
     }
 
     // Métodos do Floorplan
-
     public void saveFloorplanData(String uriString, LatLng center, float width, float bearing) {
         Long surveyId = currentSurveyId.getValue();
         if (surveyId == null || surveyId == -1L) return;

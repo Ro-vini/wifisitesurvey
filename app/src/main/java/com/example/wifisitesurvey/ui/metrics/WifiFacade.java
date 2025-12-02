@@ -28,7 +28,6 @@ public class WifiFacade {
     private List<ScanResult> scans;
     private ScanResult currentScan;
     private DhcpInfo dhcp;
-    //private String mobile;
     private int health;
 
     public WifiFacade(Context ctx) {
@@ -47,7 +46,7 @@ public class WifiFacade {
         currentScan = findCurrentScan(current, scans);
         dhcp = wifiService.getDhcpInfo();
         //mobile = wifiService.getMobileIpAddress();
-        health = healthEvaluator.evaluateNetworkHealth(current);
+        //health = healthEvaluator.evaluateNetworkHealth(current);
     }
 
     /**
@@ -56,8 +55,10 @@ public class WifiFacade {
      */
     public List<NetworkItem> buildNetworkItems() {
         List<NetworkItem> items = new ArrayList<>();
+
+        // Evitar NullPointerException
         if (scans == null) {
-            scans = new ArrayList<>(); // Evitar NullPointerException
+            scans = new ArrayList<>();
         }
 
         // Adicionar a rede atual (se estiver conectada)
@@ -66,7 +67,7 @@ public class WifiFacade {
             String ssid = (current.getSSID() == null || current.getSSID().isEmpty()) ? "<unknown ssid>" : current.getSSID().replace("\"", "");
 
             String baseDetails = formatter.formatNetworkDetails(currentScan);
-            String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp/*, mobile*/);
+            String extraDetails = formatter.formatCurrentNetworkExtras(current, dhcp);
             String details = baseDetails + "\n" + extraDetails;
 
             // Relatório de colisão
@@ -120,8 +121,10 @@ public class WifiFacade {
      */
     public List<SsidGroupItem> buildSsidGroups() {
         List<SsidGroupItem> groupItems = new ArrayList<>();
+
+        // Evitar NullPointerException
         if (scans == null) {
-            scans = new ArrayList<>(); // Evitar NullPointerException
+            scans = new ArrayList<>();
         }
 
         // 1. Agrupar ScanResults por SSID
@@ -208,7 +211,7 @@ public class WifiFacade {
 
             // Se for a rede atual, adicionar os extras
             if (isCurrentGroup && current != null && sr.BSSID.equals(current.getBSSID())) {
-                String extraDetails = formatter.formatCurrentNetworkExtras(current, health, dhcp/*, mobile*/);
+                String extraDetails = formatter.formatCurrentNetworkExtras(current, dhcp);
                 details += "\n" + extraDetails;
 
                 // Adicionar colisão SOMENTE ao BSSID específico ao qual estamos conectados

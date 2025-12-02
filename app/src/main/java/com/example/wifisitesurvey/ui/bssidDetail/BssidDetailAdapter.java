@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.BssidViewHolder> {
-
     private List<BssidInfo> bssids = new ArrayList<>();
     private String currentBssid = null;
     private final WifiService wifiService;
@@ -92,7 +91,7 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
     }
 
     /**
-     * Quando o item sai da tela, paramos a análise para economizar bateria.
+     * Quando o item sai da tela, para a análise para economizar bateria.
      */
     @Override
     public void onViewRecycled(@NonNull BssidViewHolder holder) {
@@ -194,7 +193,7 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
         };
 
         private void setupChart(LineChart chart) {
-            // --- Início da Modificação: Cores Reativas e Scroll ---
+            // --- Cores Reativas e Scroll ---
             chart.getDescription().setEnabled(false);
             chart.setDrawGridBackground(false);
 
@@ -230,7 +229,6 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
 
             // Limpar dados antigos e preparar o gráfico
             chart.setData(new LineData());
-            // --- Fim da Modificação ---
         }
 
         private void addChartEntry(int rssi, int linkSpeed) {
