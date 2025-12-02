@@ -81,12 +81,15 @@
                 tools:text="Análise de Colisão..." />
 
             <TextView
+                android:id="@+id/tvRssiChart"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
                 android:text="RSSI (dBm)"
-                android:textAppearance="@style/TextAppearance.Material3.LabelMedium" />
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/liveRssiChart"
@@ -96,12 +99,15 @@
                 tools:visibility="visible" />
 
             <TextView
+                android:id="@+id/tvSpeedChart"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
                 android:text="Velocidade (Mbps)"
-                android:textAppearance="@style/TextAppearance.Material3.LabelMedium" />
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:visibility="gone"
+                tools:visibility="visible" />
 
             <com.github.mikephil.charting.charts.LineChart
                 android:id="@+id/liveSpeedChart"

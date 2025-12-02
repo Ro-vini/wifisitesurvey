@@ -105,7 +105,9 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
         private final TextView tvBssidHeader, tvBssidDetails, tvBssidCollision;
         private final ImageView ivBssidExpandArrow;
         private final LinearLayout llBssidDetailsContent;
+        private final TextView tvRssiChart;
         private final LineChart liveRssiChart;
+        private final TextView tvSpeedChart;
         private final LineChart liveSpeedChart;
 
         // Controle da Análise
@@ -125,6 +127,10 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
 
             ivBssidExpandArrow = itemView.findViewById(R.id.ivBssidExpandArrow);
             llBssidDetailsContent = itemView.findViewById(R.id.llBssidDetailsContent);
+
+            tvRssiChart = itemView.findViewById(R.id.tvRssiChart);
+            tvSpeedChart = itemView.findViewById(R.id.tvSpeedChart);
+
             liveRssiChart = itemView.findViewById(R.id.liveRssiChart);
             liveSpeedChart = itemView.findViewById(R.id.liveSpeedChart);
         }
@@ -158,20 +164,31 @@ public class BssidDetailAdapter extends RecyclerView.Adapter<BssidDetailAdapter.
 
         void startLiveAnalysis() {
             isAnalyzing = true;
+
+            tvRssiChart.setVisibility(View.VISIBLE);
             liveRssiChart.setVisibility(View.VISIBLE);
+            tvSpeedChart.setVisibility(View.VISIBLE);
             liveSpeedChart.setVisibility(View.VISIBLE);
+
             setupChart(liveRssiChart);
             setupChart(liveSpeedChart);
+
             analysisStartTime = System.currentTimeMillis();
             analysisHandler.post(analysisRunnable);
             Toast.makeText(itemView.getContext(), "Iniciando análise...", Toast.LENGTH_SHORT).show();
         }
 
         void stopLiveAnalysis() {
-            if (!isAnalyzing) return;
+            if (!isAnalyzing)
+                return;
+
             isAnalyzing = false;
+
+            tvRssiChart.setVisibility(View.GONE);
             liveRssiChart.setVisibility(View.GONE);
+            tvSpeedChart.setVisibility(View.GONE);
             liveSpeedChart.setVisibility(View.GONE);
+
             analysisHandler.removeCallbacks(analysisRunnable);
         }
 
