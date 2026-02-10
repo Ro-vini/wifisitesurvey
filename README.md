@@ -41,6 +41,9 @@ To use the application, follow these steps:
 7. Toggle location tracking on and off
 
 ## Project Structure
+
+<img width="943" height="913" alt="image" src="https://github.com/user-attachments/assets/d471e172-7cda-4889-9ff7-431ea392ddfb" />
+
 ```bash
 app/src/main/java/com/example/wifisitesurvey
 ├── data
@@ -57,6 +60,9 @@ app/src/main/java/com/example/wifisitesurvey
 
 ## Screenshots & Videos
 
+https://github.com/user-attachments/assets/95b00b96-8ebe-405b-bf8f-50ac16660c8d
+
+https://github.com/user-attachments/assets/33bea2db-68c4-4be0-9ef5-9ef1d9766313
 
 ## Future Implementations
 
