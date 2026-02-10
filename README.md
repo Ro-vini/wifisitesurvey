@@ -1,6 +1,8 @@
 # WiFi Site Survey Application
 The WiFi Site Survey Application is a comprehensive tool designed to help users conduct WiFi site surveys, analyze WiFi signals, and manage survey data. The application provides a user-friendly interface for users to conduct surveys, view results, and interact with the application's core functionality. The application is built using a combination of Java, AndroidX libraries, and Google Maps Android API.
 
+[The original Article, with technology, fundamentals, diagrams and test, could be verified here (Articple.pdf).
+
 ## Features
 - Conduct WiFi site surveys and analyze WiFi signals
 - Display survey results and provide location visualization using Google Maps
