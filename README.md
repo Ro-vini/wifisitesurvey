@@ -1,7 +1,7 @@
 # WiFi Site Survey Application
 The WiFi Site Survey Application is a comprehensive tool designed to help users conduct WiFi site surveys, analyze WiFi signals, and manage survey data. The application provides a user-friendly interface for users to conduct surveys, view results, and interact with the application's core functionality. The application is built using a combination of Java, AndroidX libraries, and Google Maps Android API.
 
-[The original Article, with technology, fundamentals, diagrams and test, could be verified here (Articple.pdf).
+[The original Article, with technology, fundamentals, diagrams and test, can be verified here](./Article.pdf).
 
 ## Features
 - Conduct WiFi site surveys and analyze WiFi signals
@@ -41,58 +41,34 @@ To use the application, follow these steps:
 7. Toggle location tracking on and off
 
 ## Project Structure
-```
-app
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   ├── com
-│   │   │   │   ├── example
-│   │   │   │   │   ├── wifisitesurvey
-│   │   │   │   │   │   ├── ui
-│   │   │   │   │   │   │   ├── main
-│   │   │   │   │   │   │   │   ├── MainActivity.java
-│   │   │   │   │   │   │   ├── survey
-│   │   │   │   │   │   │   │   ├── SurveyActivity.java
-│   │   │   │   │   │   ├── data
-│   │   │   │   │   │   │   ├── repository
-│   │   │   │   │   │   │   │   ├── SurveyRepository.java
-│   │   │   │   │   │   │   ├── database
-│   │   │   │   │   │   │   │   ├── AppDatabase.java
-│   │   │   │   │   │   ├── model
-│   │   │   │   │   │   │   ├── Survey.java
-│   │   │   │   │   │   ├── utils
-│   │   │   │   │   │   │   ├── Constants.java
-│   │   │   │   │   │   │   ├── WifiAnalyzer.java
-│   │   │   │   │   │   ├── services
-│   │   │   │   │   │   │   ├── WifiService.java
-│   │   │   │   │   │   ├── viewmodel
-│   │   │   │   │   │   │   ├── SurveyViewModel.java
-│   │   │   │   │   │   ├── MainViewModel.java
-│   │   │   │   │   │   ├── WifiStateReceiver.java
-│   │   │   │   │   │   ├── SurveyAdapter.java
-│   │   ├── res
-│   │   │   ├── layout
-│   │   │   │   ├── activity_main.xml
-│   │   │   │   ├── activity_survey.xml
-│   │   │   ├── values
-│   │   │   │   ├── strings.xml
-│   │   │   │   ├── styles.xml
-│   ├── test
-│   │   ├── java
-│   │   │   ├── com
-│   │   │   │   ├── example
-│   │   │   │   │   ├── wifisitesurvey
-│   │   │   │   │   │   ├── ui
-│   │   │   │   │   │   │   ├── main
-│   │   │   │   │   │   │   │   ├── MainActivityTest.java
-│   │   │   │   │   │   │   ├── survey
-│   │   │   │   │   │   │   │   ├── SurveyActivityTest.java
-├── build.gradle
-├── gradle.properties
+```bash
+app/src/main/java/com/example/wifisitesurvey
+├── data
+│   ├── database    # Room's Settings (AppDatabase)
+│   ├── model       # Entities (Survey, DataPoints)
+│   └── repository  # SurveyRepository (Data management)
+├── services        # WifiService and LocationProvider (Access to Hardware)
+├── ui
+│   ├── main        # Main screen
+│   └── survey      # SurveyActivity and SurveyViewModel (Maps logic)
+└── utils           # Analysis algoritms and constants
+
 ```
 
-## Screenshots
+## Screenshots & Videos
+
+
+## Future Implementations
+
+The project is constantly evolving to overcome the limitations of indoor mapping:
+
+* [ ] **Migration to OpenStreetMap (osmdroid):** To reduce proprietary dependencies and enable improved offline functionality.
+
+
+* [ ] **LiDAR/SLAM Integration:** Use of sensors for real-time architectural mapping of the environment (Google Cartographer).
+
+
+* [ ] **Dedicated Hardware:** Future integration with Raspberry Pi + Kali Linux for in-depth packet and jitter analysis.
 
 ## Contributing
 To contribute to the project, please follow these steps:
@@ -102,7 +78,10 @@ To contribute to the project, please follow these steps:
 4. Create a pull request
 
 ## Contact
-For any questions or concerns, please contact us at viroveri11@gmail.com or nic.ruzza@gmail.com.
+For any questions or concerns, please contact us at:
+* **Nícolas Ruzza** - [nic.ruzza@gmail.com](mailto:nic.ruzza@gmail.com)
+
+* **Vinícius Eduardo Roveri** - [viroveri117@gmail.com](mailto:viroveri117@gmail.com)
 
 ## Thanks Message
 We would like to thank all the contributors and users of the WiFi Site Survey Application.
